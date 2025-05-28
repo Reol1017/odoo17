@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_ocr_debug_wizard_form" model="ir.ui.view">
+        <field name="name">ocr.debug.wizard.form</field>
+        <field name="model">ocr.debug.wizard</field>
+        <field name="arch" type="xml">
+            <form string="OCR调试向导">
+                <div class="alert alert-info" role="alert">
+                    <strong>OCR调试工具</strong><br/>
+                    上传发票文件测试OCR识别效果，查看原始结果和字段映射情况。<br/>
+                    支持图片格式 (JPG, PNG, BMP) 和 PDF 文件，最大 4MB。
+                </div>
+                
+                <sheet>
+                    <group>
+                        <group string="上传发票文件">
+                            <field name="invoice_file" widget="binary" string="选择发票文件"
+                                   options="{'accepted_file_extensions': '.jpg,.jpeg,.png,.bmp,.pdf'}"
+                                   help="支持 JPG, PNG, BMP, PDF 格式"/>
+                            <field name="file_name" invisible="True"/>
+                            <field name="company_id" invisible="True"/>
+                        </group>
+                        
+                        <group string="识别状态" invisible="not raw_ocr_result">
+                            <field name="success" widget="boolean_toggle"/>
+                            <field name="error_message" widget="text" readonly="True" 
+                                   invisible="success"/>
+                        </group>
+                    </group>
+                    
+                    <!-- 隐藏原始OCR数据，避免界面混乱 -->
+                    <field name="raw_ocr_result" invisible="True"/>
+                    <field name="mapped_fields" invisible="True"/>
+                    
+                    <notebook invisible="not success">
+                        <page string="识别结果预览" name="preview_result">
+                            <group string="识别的关键信息">
+                                <field name="processed_result" nolabel="True" widget="text" readonly="True"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                
+                <footer>
+                    <button name="action_test_ocr" string="测试OCR识别" type="object" 
+                            class="btn-primary" invisible="success"/>
+                    
+                    <button name="action_create_expense" string="创建费用" type="object" 
+                            class="btn-success" invisible="not success"/>
+                    
+                    <button name="action_test_ocr" string="重新测试" type="object" 
+                            class="btn-warning" invisible="not success"/>
+                    
+                    <button string="关闭" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_ocr_debug_wizard" model="ir.actions.act_window">
+        <field name="name">OCR调试向导</field>
+        <field name="res_model">ocr.debug.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <!-- 添加调试菜单 -->
+    <menuitem id="menu_ocr_debug" 
+              name="OCR调试工具" 
+              parent="hr_expense.menu_hr_expense_configuration"
+              action="action_ocr_debug_wizard"
+              sequence="101"/>
+</odoo>

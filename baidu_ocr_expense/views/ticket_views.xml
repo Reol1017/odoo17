@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- 增值税发票视图 -->
+    <record id="vat_invoice_view_form" model="ir.ui.view">
+        <field name="name">vat.invoice.form</field>
+        <field name="model">vat.invoice</field>
+        <field name="arch" type="xml">
+            <form string="增值税发票">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="invoice_code"/>
+                            <field name="invoice_number"/>
+                            <field name="invoice_date"/>
+                            <field name="invoice_type"/>
+                            <field name="amount"/>
+                        </group>
+                        <group>
+                            <field name="vendor_name"/>
+                            <field name="vendor_tax_id"/>
+                            <field name="purchaser_name"/>
+                            <field name="purchaser_tax_id"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="发票详情">
+                            <group>
+                                <group string="销售方信息">
+                                    <field name="vendor_address"/>
+                                    <field name="vendor_bank"/>
+                                </group>
+                                <group string="购买方信息">
+                                    <field name="purchaser_address"/>
+                                    <field name="purchaser_bank"/>
+                                </group>
+                            </group>
+                            <group>
+                                <group string="商品信息">
+                                    <field name="commodity_name"/>
+                                    <field name="commodity_type"/>
+                                    <field name="commodity_unit"/>
+                                    <field name="commodity_quantity"/>
+                                    <field name="commodity_price"/>
+                                    <field name="commodity_amount"/>
+                                </group>
+                                <group string="税务信息">
+                                    <field name="tax_rate"/>
+                                    <field name="tax_amount"/>
+                                    <field name="amount_without_tax"/>
+                                    <field name="amount_in_words"/>
+                                </group>
+                            </group>
+                            <group string="其他信息">
+                                <field name="drawer"/>
+                                <field name="payee"/>
+                                <field name="checker"/>
+                                <field name="remarks"/>
+                            </group>
+                        </page>
+                        <page string="OCR数据">
+                            <field name="ocr_raw_data"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="vat_invoice_view_tree" model="ir.ui.view">
+        <field name="name">vat.invoice.tree</field>
+        <field name="model">vat.invoice</field>
+        <field name="arch" type="xml">
+            <tree string="增值税发票">
+                <field name="name"/>
+                <field name="invoice_code"/>
+                <field name="invoice_number"/>
+                <field name="invoice_date"/>
+                <field name="vendor_name"/>
+                <field name="purchaser_name"/>
+                <field name="amount"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="vat_invoice_action" model="ir.actions.act_window">
+        <field name="name">增值税发票</field>
+        <field name="res_model">vat.invoice</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <!-- 火车票视图 -->
+    <record id="train_ticket_view_form" model="ir.ui.view">
+        <field name="name">train.ticket.form</field>
+        <field name="model">train.ticket</field>
+        <field name="arch" type="xml">
+            <form string="火车票">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="ticket_number"/>
+                            <field name="train_number"/>
+                            <field name="date"/>
+                            <field name="amount"/>
+                        </group>
+                        <group>
+                            <field name="origin"/>
+                            <field name="destination"/>
+                            <field name="departure_time"/>
+                            <field name="arrival_time"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="座位信息">
+                            <field name="seat_type"/>
+                            <field name="seat_number"/>
+                        </group>
+                        <group string="乘客信息">
+                            <field name="passenger_name"/>
+                            <field name="passenger_id"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="OCR数据">
+                            <field name="ocr_raw_data"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="train_ticket_view_tree" model="ir.ui.view">
+        <field name="name">train.ticket.tree</field>
+        <field name="model">train.ticket</field>
+        <field name="arch" type="xml">
+            <tree string="火车票">
+                <field name="name"/>
+                <field name="ticket_number"/>
+                <field name="train_number"/>
+                <field name="origin"/>
+                <field name="destination"/>
+                <field name="departure_time"/>
+                <field name="amount"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="train_ticket_action" model="ir.actions.act_window">
+        <field name="name">火车票</field>
+        <field name="res_model">train.ticket</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <!-- 菜单项 -->
+    <menuitem id="ticket_menu_root" name="票据管理" parent="hr_expense.menu_hr_expense_root" sequence="10"/>
+    <menuitem id="ticket_menu_category" name="票据" parent="ticket_menu_root" sequence="10"/>
+    <menuitem id="vat_invoice_menu" name="增值税发票" parent="ticket_menu_category" action="vat_invoice_action" sequence="10"/>
+    <menuitem id="train_ticket_menu" name="火车票" parent="ticket_menu_category" action="train_ticket_action" sequence="20"/>
+</odoo> 

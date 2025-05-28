@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- OCR调试向导表单视图 -->
+    <record id="view_ocr_debug_wizard_form" model="ir.ui.view">
+        <field name="name">ocr.debug.wizard.form</field>
+        <field name="model">ocr.debug.wizard</field>
+        <field name="arch" type="xml">
+            <form string="OCR调试向导">
+                <sheet>
+                    <group>
+                        <field name="test_file" widget="binary" filename="test_filename" required="1"/>
+                        <field name="test_filename" invisible="1"/>
+                        <field name="ticket_type" readonly="1" invisible="not raw_result"/>
+                    </group>
+                    <group invisible="not image_preview">
+                        <field name="image_preview" widget="image" readonly="1" options="{'size': [500, 500]}"/>
+                    </group>
+                    <group invisible="not raw_result">
+                        <field name="raw_result" readonly="1" widget="ace" options="{'mode': 'json'}"/>
+                    </group>
+                </sheet>
+                <footer>
+                    <button name="action_test_ocr" string="测试OCR识别" type="object" class="oe_highlight"/>
+                    <button string="关闭" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+    
+    <!-- OCR调试向导动作 -->
+    <record id="action_ocr_debug_wizard" model="ir.actions.act_window">
+        <field name="name">OCR调试向导</field>
+        <field name="res_model">ocr.debug.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+    
+    <!-- 添加OCR调试向导到配置菜单 -->
+    <menuitem id="menu_ocr_debug_wizard"
+              name="OCR调试向导"
+              action="action_ocr_debug_wizard"
+              parent="hr_expense.menu_hr_expense_configuration"
+              sequence="110"/>
+</odoo> 

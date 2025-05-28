@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- 继承hr.expense表单视图 -->
+    <record id="hr_expense_view_form_with_ocr" model="ir.ui.view">
+        <field name="name">hr.expense.form.with.ocr</field>
+        <field name="model">hr.expense</field>
+        <field name="inherit_id" ref="hr_expense.hr_expense_view_form"/>
+        <field name="arch" type="xml">
+            <!-- 将OCR提取字段添加到描述字段后面 -->
+            <xpath expr="//field[@name='description']" position="after">
+                <field name="ocr_extracted" invisible="True"/>
+               
+            </xpath>
+            
+            <!-- 在产品字段下方添加中文发票信息组 -->
+            <xpath expr="//field[@name='product_id']/../../.." position="after">
+                <group string="发票信息" invisible="not ocr_extracted">
+                    <group string="基本信息">
+                        <field name="invoice_number" readonly="True"/>
+                        <field name="invoice_code" readonly="True"/>
+                        <field name="invoice_date" readonly="True"/>
+                        <field name="drawer" readonly="True"/>
+                    </group>
+                    <group string="金额信息">
+                        <field name="amount" string="含税金额" readonly="True"/>
+                        <field name="tax_rate" readonly="True"/>
+                        <field name="tax_amount"/>
+                        <field name="amount_in_words" readonly="True"/>
+                    </group>
+                </group>
+                <group class="row"> 
+                    <group class="col-6" string="销售方信息" invisible="not ocr_extracted">
+                        
+                            <field name="vendor_name" readonly="True"/>
+                            <field name="vendor_tax_id" readonly="True"/>
+                        
+                    </group>
+                    <group class="col-6" string="购买方信息" invisible="not ocr_extracted">
+                        
+                            <field name="purchaser_name" readonly="True"/>
+                            <field name="purchaser_tax_id" readonly="True"/>
+                        
+                    </group>
+                </group>
+                
+            </xpath>
+            
+            <!-- 添加OCR原始数据选项卡 -->
+            <!-- <xpath expr="//div[@class='oe_chatter']" position="before">
+                <notebook invisible="not ocr_extracted">
+                    <page string="OCR原始数据" name="ocr_info">
+                        <group>
+                            <field name="ocr_raw_data" nolabel="True" readonly="True"/>
+                        </group>
+                    </page>
+                </notebook>
+            </xpath> -->
+            
+            <!-- 添加OCR识别按钮 -->
+            <xpath expr="//button[@name='action_submit_expenses']" position="before">
+                <button name="%(action_ocr_expense_wizard)d" string="OCR识别" type="action" class="oe_highlight" invisible="state != 'draft' or sheet_id"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- 为 Odoo 17 添加自定义列表视图 -->
+    <record id="hr_expense_view_tree_with_ocr" model="ir.ui.view">
+        <field name="name">hr.expense.tree.with.ocr</field>
+        <field name="model">hr.expense</field>
+        <field name="arch" type="xml">
+            <tree string="费用" decoration-info="ocr_extracted == True" sample="1">
+                <field name="name"/>
+                <field name="date"/>
+                <field name="employee_id" widget="many2one_avatar_employee"/>
+                <field name="product_id"/>
+                <field name="unit_amount" string="单价"/>
+                <field name="quantity"/>
+                <field name="amount" sum="含税金额"/>
+                <field name="tax_amount" sum="税额" optional="show"/>
+                <field name="currency_id" invisible="True"/>
+                <field name="invoice_number" optional="show"/>
+                <field name="vendor_name" optional="show"/>
+                <field name="purchaser_name" optional="hide"/>
+                <field name="drawer" optional="hide"/>
+                <field name="amount_in_words" optional="hide"/>
+                <field name="ocr_extracted" optional="hide"/>
+                <field name="state"/>
+                <field name="sheet_id" optional="hide"/>
+                <field name="company_id" groups="base.group_multi_company" optional="hide"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- 创建菜单动作，指向新创建的视图 -->
+    <record id="action_hr_expense_ocr" model="ir.actions.act_window">
+        <field name="name">OCR费用</field>
+        <field name="res_model">hr.expense</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">创建第一个OCR识别的费用</p>
+            <p>使用OCR功能识别发票信息并创建费用。</p>
+        </field>
+    </record>
+
+    <!-- 添加菜单项 -->
+    <menuitem id="menu_hr_expense_ocr" 
+              name="OCR识别的费用" 
+              parent="hr_expense.menu_hr_expense_root"
+              action="action_hr_expense_ocr"
+              sequence="5"/>
+
+    <!-- 添加OCR搜索视图 -->
+    <record id="hr_expense_view_search_ocr" model="ir.ui.view">
+        <field name="name">hr.expense.search.ocr</field>
+        <field name="model">hr.expense</field>
+        <field name="inherit_id" ref="hr_expense.hr_expense_view_search"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='name']" position="after">
+                <field name="invoice_number"/>
+                <field name="vendor_name"/>
+                <field name="vendor_tax_id"/>
+                <field name="purchaser_name"/>
+                <field name="drawer"/>
+                <filter string="OCR识别" name="ocr_extracted" domain="[('ocr_extracted', '=', True)]"/>
+            </xpath>
+            <xpath expr="//group" position="inside">
+                <filter string="销售方" name="vendor_name" context="{'group_by': 'vendor_name'}"/>
+                <filter string="购买方" name="purchaser_name" context="{'group_by': 'purchaser_name'}"/>
+                <filter string="开票人" name="drawer" context="{'group_by': 'drawer'}"/>
+                <filter string="发票日期" name="invoice_date" context="{'group_by': 'invoice_date'}"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,6 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_ocr_debug_wizard,ocr.debug.wizard,model_ocr_debug_wizard,base.group_user,1,1,1,1
+access_baidu_ocr_config_user,baidu.ocr.config.user,model_baidu_ocr_config,base.group_user,1,0,0,0
+access_baidu_ocr_config_manager,baidu.ocr.config.manager,model_baidu_ocr_config,base.group_system,1,1,1,1
+access_train_ticket_user,train.ticket.user,model_train_ticket,base.group_user,1,1,1,1
+access_vat_invoice_user,vat.invoice.user,model_vat_invoice,base.group_user,1,1,1,1
