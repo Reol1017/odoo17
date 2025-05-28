@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- OCR上传向导表单视图 -->
+    <record id="ocr_upload_wizard_view_form" model="ir.ui.view">
+        <field name="name">ocr.upload.wizard.form</field>
+        <field name="model">ocr.upload.wizard</field>
+        <field name="arch" type="xml">
+            <form string="OCR识别">
+                <sheet>
+                    <div class="alert alert-info" role="alert">
+                        <p>请上传要识别的票据图片或PDF文件。系统将自动识别票据类型并处理相关信息。</p>
+                        <p>支持的票据类型：增值税发票、火车票等。</p>
+                    </div>
+                    <group>
+                        <field name="invoice_file" widget="binary" filename="filename"/>
+                        <field name="filename" invisible="1"/>
+                        <field name="expense_id" invisible="1"/>
+                        <field name="expense_sheet_id" invisible="1"/>
+                    </group>
+                </sheet>
+                <footer>
+                    <button name="action_upload_and_recognize" string="上传并识别" type="object" class="oe_highlight"/>
+                    <button string="取消" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+    
+    <!-- OCR上传向导动作 -->
+    <record id="action_ocr_upload_wizard" model="ir.actions.act_window">
+        <field name="name">OCR识别</field>
+        <field name="res_model">ocr.upload.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="ocr_upload_wizard_view_form"/>
+        <field name="target">new</field>
+    </record>
+</odoo> 

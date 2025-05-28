@@ -26,7 +26,7 @@ class OcrDebugWizard(models.TransientModel):
         if not self.test_file:
             raise UserError(_('请先上传测试文件'))
         
-        # 获取OCR配置
+            # 获取OCR配置
         config = self.env['baidu.ocr.config'].get_default_config()
         if not config:
             raise UserError(_('未找到有效的百度OCR配置，请先设置配置信息'))
