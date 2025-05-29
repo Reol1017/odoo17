@@ -1,0 +1,28 @@
+<odoo>
+    <data>
+        <!-- 颜色模型的树视图 -->
+        <record id="view_product_color_tree" model="ir.ui.view">
+            <field name="name">product.color.tree</field>
+            <field name="model">product.color</field>
+            <field name="arch" type="xml">
+                <tree string="颜色列表" editable="bottom">
+                    <field name="name" />
+                    <field name="notes" />
+                </tree>
+            </field>
+        </record>
+
+        <!-- 菜单项 -->
+        <record id="action_product_color" model="ir.actions.act_window">
+            <field name="name">颜色</field>
+            <field name="res_model">product.color</field>
+            <field name="view_mode">tree</field>
+        </record>
+
+        <menuitem id="menu_product_color"
+              name="颜色"
+              action="action_product_color"
+              parent="sale.prod_config_main" 
+              sequence="6"/>
+    </data>
+</odoo>

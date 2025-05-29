@@ -1,0 +1,72 @@
+<odoo>
+    <!-- 扩展销售订单表单视图 -->
+    <record id="view_order_form_document" model="ir.ui.view">
+        <field name="name">sale.order.form.document</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <!-- 添加智能按钮 -->
+            <div name="button_box" position="inside">
+                <button class="oe_stat_button" name="action_view_documents" type="object" icon="fa-file-text-o" invisible="document_count == 0">
+                    <field string="文档" name="document_count" widget="statinfo"/>
+                </button>
+                <button class="oe_stat_button" name="action_view_drawings" type="object" icon="fa-file-image-o" invisible="drawing_count == 0">
+                    <field string="图纸" name="drawing_count" widget="statinfo"/>
+                </button>
+                <button class="oe_stat_button" name="action_view_contracts" type="object" icon="fa-file-word-o" invisible="contract_count == 0">
+                    <field string="合同" name="contract_count" widget="statinfo"/>
+                </button>
+            </div>
+            
+             <xpath expr="//field[@name='partner_id']" position="attributes">
+                <attribute name="domain">[('is_company', '=', True)]</attribute>
+            </xpath>
+           
+            
+            <!-- 添加文档、图纸和合同相关页面 - 将文档和图纸分开为两个独立页面 -->
+            <xpath expr="//page[@name='other_information']" position="after">
+                <!-- 文档页面 -->
+                <page string="文档" name="documents">
+                    <field name="document_ids" widget="many2many" options="{'no_create': True}">
+                        <tree>
+                            <field name="document_number"/>
+                            <field name="name"/>
+                            <field name="version"/>
+                            <field name="category_id"/>
+                            <field name="file_type"/>
+                            <field name="state"/>
+                        </tree>
+                    </field>
+                </page>
+                
+                <!-- 图纸页面 -->
+                <page string="图纸" name="drawings">
+                    <field name="drawing_ids" widget="many2many" options="{'no_create': True}">
+                        <tree>
+                            <field name="document_number"/>
+                            <field name="name"/>
+                            <field name="version"/>
+                            <field name="drawing_type"/>
+                            <field name="state"/>
+                        </tree>
+                    </field>
+                </page>
+                
+                <!-- 合同页面 -->
+                <page string="合同" name="contracts">
+                    <field name="contract_ids" widget="many2many" options="{'no_create': True}">
+                        <tree>
+                            <field name="document_number"/>
+                            <field name="name"/>
+                            <field name="contract_type"/>
+                            <field name="date_start"/>
+                            <field name="date_end"/>
+                            <field name="amount_total"/>
+                            <field name="contract_state"/>
+                        </tree>
+                    </field>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

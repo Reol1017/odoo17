@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- 树状视图 - 可编辑 -->
+    <record id="view_warehouse_weight_tree" model="ir.ui.view">
+        <field name="name">warehouse.weight.tree</field>
+        <field name="model">warehouse.weight</field>
+        <field name="arch" type="xml">
+            <tree string="重量表" editable="bottom">
+                <field name="name" />
+                <field name="product_id"/>
+                <field name="product_categ_id"/>
+                <field name="specification"/>
+                <field name="diameter" placeholder="例如：100mm"/>
+                <field name="height" placeholder="例如：200mm"/>
+              
+                <field name="weight"/>
+                <field name="notes" optional="hide"/>
+            </tree>
+        </field>
+    </record>
+    
+    <!-- 表单视图 -->
+    <record id="view_warehouse_weight_form" model="ir.ui.view">
+        <field name="name">warehouse.weight.form</field>
+        <field name="model">warehouse.weight</field>
+        <field name="arch" type="xml">
+            <form string="重量表">
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="product_id"/>
+                            <field name="product_categ_id"/>
+                            <field name="specification"/>
+                        </group>
+                        <group>
+                            <field name="diameter" placeholder="例如：100mm"/>
+                            <field name="height" placeholder="例如：200mm"/>
+                            <field name="weight"/>
+                            <field name="active" widget="boolean_toggle"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="备注">
+                            <field name="notes" placeholder="添加额外的备注..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    
+    <!-- 搜索视图 -->
+    <record id="view_warehouse_weight_search" model="ir.ui.view">
+        <field name="name">warehouse.weight.search</field>
+        <field name="model">warehouse.weight</field>
+        <field name="arch" type="xml">
+            <search string="重量搜索">
+                <field name="name" />
+                <field name="product_id" string="产品"/>
+                <field name="product_categ_id" string="产品类别"/>
+                <field name="specification" />
+                <field name="diameter" string="直径"/>
+                <field name="height" string="高度"/>
+                <field name="weight" string="重量"/>
+                <filter string="有效" name="active" domain="[('active','=',True)]"/>
+                <filter string="无效" name="inactive" domain="[('active','=',False)]"/>
+                <group expand="0" string="分组">
+                    <filter string="产品" name="groupby_product" domain="[]" context="{'group_by':'product_id'}"/>
+                    <filter string="产品类别" name="groupby_categ" domain="[]" context="{'group_by':'product_categ_id'}"/>
+                    <filter string="型号" name="groupby_name" domain="[]" context="{'group_by':'name'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+    
+    <!-- 动作 -->
+    <record id="action_warehouse_weight" model="ir.actions.act_window">
+        <field name="name">重量表</field>
+        <field name="res_model">warehouse.weight</field>
+        <field name="view_mode">tree,form</field>
+        <field name="search_view_id" ref="view_warehouse_weight_search"/>
+        <field name="context">{'search_default_active': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                创建第一条重量记录
+            </p>
+            <p>
+                记录产品的规格、重量和尺寸信息，用于仓库管理。
+            </p>
+        </field>
+    </record>
+    
+    <!-- 菜单项 -->
+    <menuitem id="menu_warehouse_weight"
+              name="重量表"
+              action="action_warehouse_weight"
+              parent="sale.prod_config_main" 
+              sequence="5"/>
+</odoo>

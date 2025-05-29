@@ -1,0 +1,17 @@
+<odoo>
+    <record id="action_quote_system_client" model="ir.actions.client">
+        <field name="name">报价系统</field>
+        <field name="tag">quote_action</field>
+        <field name="params">{'default_view': 'static'}</field>
+    </record>
+       
+    <menuitem 
+        id="menu_root_quote" 
+        name="报价系统" 
+        sequence="10"
+        action="action_quote_system_client"
+        web_icon="quote_system,static/description/icon.png"/>
+
+
+
+</odoo>

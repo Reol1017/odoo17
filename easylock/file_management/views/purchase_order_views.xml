@@ -1,0 +1,14 @@
+<odoo>
+    <!-- 扩展采购订单表单视图，仅添加合作伙伴字段限制 -->
+    <record id="purchase_order_form_partner_company_only" model="ir.ui.view">
+        <field name="name">purchase.order.form.partner.company.only</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_form"/>
+        <field name="arch" type="xml">
+            <!-- 限制partner_id字段只显示公司 -->
+            <xpath expr="//field[@name='partner_id']" position="attributes">
+                <attribute name="domain">[('is_company', '=', True)]</attribute>
+            </xpath>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,7 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_warehouse_weight_user,warehouse.weight.user,model_warehouse_weight,base.group_user,1,0,0,0
+access_warehouse_weight_manager,warehouse.weight.manager,model_warehouse_weight,base.group_system,1,1,1,1
+access_warehouse_weight_inventory,warehouse.weight.inventory,model_warehouse_weight,stock.group_stock_manager,1,1,1,1
+access_warehouse_weight_inventory_user,warehouse.weight.inventory.user,model_warehouse_weight,stock.group_stock_user,1,1,1,0
+access_product_color_user,product.color.user,model_product_color,,1,0,0,0
+access_product_color_manager,product.color.manager,model_product_color,base.group_system,1,1,1,1

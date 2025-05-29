@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- 图纸表单视图 -->
+    <record id="view_drawing_form" model="ir.ui.view">
+        <field name="name">document.drawing.form</field>
+        <field name="model">document.drawing</field>
+        <field name="arch" type="xml">
+            <form>
+               <header>
+    <button name="action_submit" string="提交" type="object" invisible="context.get('state') != 'draft'" class="oe_highlight"/>
+    <button name="action_approve" string="批准" type="object" invisible="context.get('state') != 'submitted'" class="oe_highlight" groups="file_management.group_document_manager"/>
+    <button name="action_reject" string="拒绝" type="object" invisible="context.get('state') != 'submitted'" groups="file_management.group_document_manager"/>
+    <button name="action_archive" string="归档" type="object" invisible="context.get('state') not in ('approved', 'rejected')"/>
+    <button name="action_draft" string="设为草稿" type="object" invisible="context.get('state') == 'draft'"/>
+    <button name="action_create_new_version" string="创建新版本" type="object" class="oe_highlight"/>
+    <field name="state" widget="statusbar" statusbar_visible="draft,submitted,approved"/>
+</header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <!-- 智能按钮可以添加在这里 -->
+                    </div>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="图纸名称"/>
+                        </h1>
+                        <h3>
+                            <field name="document_number" placeholder="图纸编号"/>
+                            <span class="ml-2">版本: <field name="version" class="oe_inline"/></span>
+                        </h3>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="category_id" domain="[('is_drawing', '=', True)]"/>
+                            <field name="drawing_type"/>
+                            <field name="scale"/>
+                            <field name="paper_size"/>
+                            <field name="custom_size" invisible="paper_size != 'custom'"/>
+                            <field name="file_type"/>
+                            <field name="file" filename="filename"/>
+                            <field name="filename" invisible="1"/>
+                            <field name="tag_ids" widget="many2many_tags" options="{'color_field': 'color'}"/>
+                        </group>
+                        <group>
+                            <field name="user_id"/>
+                            <field name="create_date"/>
+                            <field name="reviewer_id" invisible="state not in ('approved', 'rejected')"/>
+                            <field name="approval_date" invisible="state != 'approved'"/>
+                            <field name="previous_version_id" readonly="1" invisible="not previous_version_id"/>
+                            <field name="next_version_id" readonly="1" invisible="not next_version_id"/>
+                            <field name="document_id" invisible="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="描述">
+                            <field name="description" placeholder="输入图纸描述..."/>
+                        </page>
+                        <page string="关联信息">
+                            <group>
+                                <field name="partner_id"/>
+                                <field name="product_id"/>
+                                <field name="project_id"/>
+                                <field name="task_ids" widget="many2many_tags"/>
+                                <field name="sale_order_id"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <!-- 图纸树形视图 -->
+    <record id="view_drawing_tree" model="ir.ui.view">
+        <field name="name">document.drawing.tree</field>
+        <field name="model">document.drawing</field>
+        <field name="arch" type="xml">
+            <tree decoration-success="state == 'approved'" decoration-warning="state == 'submitted'" decoration-danger="state == 'rejected'" decoration-muted="state == 'archived'">
+                <field name="document_number"/>
+                <field name="name"/>
+                <field name="version"/>
+                <field name="drawing_type"/>
+                <field name="scale"/>
+                <field name="user_id"/>
+                <field name="create_date"/>
+                <field name="state"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- 图纸搜索视图 -->
+    <record id="view_drawing_search" model="ir.ui.view">
+        <field name="name">document.drawing.search</field>
+        <field name="model">document.drawing</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="document_number"/>
+                <field name="description"/>
+                <field name="user_id"/>
+                <field name="drawing_type"/>
+                <filter string="我的图纸" name="my_drawings" domain="[('user_id', '=', uid)]"/>
+                <filter string="草稿" name="draft" domain="[('state', '=', 'draft')]"/>
+                <filter string="已提交" name="submitted" domain="[('state', '=', 'submitted')]"/>
+                <filter string="已批准" name="approved" domain="[('state', '=', 'approved')]"/>
+                <filter string="已拒绝" name="rejected" domain="[('state', '=', 'rejected')]"/>
+                <filter string="已归档" name="archived" domain="[('state', '=', 'archived')]"/>
+                <group expand="0" string="分组依据">
+                    <filter string="图纸类型" name="groupby_type" context="{'group_by': 'drawing_type'}"/>
+                    <filter string="负责人" name="groupby_user" context="{'group_by': 'user_id'}"/>
+                    <filter string="状态" name="groupby_state" context="{'group_by': 'state'}"/>
+                    <filter string="创建日期" name="groupby_create_date" context="{'group_by': 'create_date:month'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- 图纸操作窗口 -->
+    <record id="action_drawing" model="ir.actions.act_window">
+        <field name="name">图纸</field>
+        <field name="res_model">document.drawing</field>
+        <field name="view_mode">tree,form</field>
+        <field name="context">{'search_default_my_drawings': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                创建您的第一个图纸
+            </p>
+            <p>
+                管理和追踪技术图纸，包括CAD文件、工程图等。
+            </p>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,576 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="quote_system.quote_static_page" owl="1">
+        <!-- 添加样式确保页面可滚动 -->
+        <div class="container-fluid mt-4 px-4 pb-4" style="overflow-y: auto; max-height: 100%;">
+            <!-- 标题部分 -->
+            <div class="card mb-4 shadow-sm">
+                <div class="card-body">
+                    <h1 class="text-center mb-0">
+                        <t t-esc="state.name"/> 项目报价单
+                    </h1>
+                </div>
+            </div>
+            
+            <!-- 信息部分 -->
+            <div class="row mb-4">
+                <!-- 客户信息卡片 -->
+                <div class="col-md-4 mb-4">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0"><i class="fa fa-building me-2"></i>客户信息</h5>
+                        </div>
+                        <div class="card-body">
+                            <!-- 客户公司选择 -->
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">客户公司:</label>
+                                <div class="position-relative">
+                                    <input type="text" 
+                                           class="form-control" 
+                                           t-model="state.partnerSearchTerm"
+                                           t-on-input="(ev) => searchPartners(ev.target.value)"
+                                           placeholder="搜索公司..."
+                                           autocomplete="off"/>
+                                    
+                                    <!-- 搜索结果下拉框 -->
+                                    <div t-if="state.partnerSearchResults.length > 0" 
+                                         class="position-absolute start-0 mt-1 w-100 bg-white border rounded shadow-sm" 
+                                         style="z-index: 1000; max-height: 200px; overflow-y: auto;">
+                                        <div t-foreach="state.partnerSearchResults" t-as="partner" t-key="partner.id"
+                                             class="p-2 border-bottom hover-bg-light cursor-pointer"
+                                             t-on-click="() => selectPartner(partner)">
+                                            <div><strong t-esc="partner.name"/></div>
+                                            <div t-if="partner.email" class="small text-muted" t-esc="partner.email"/>
+                                            <div t-if="partner.mobile" class="small text-muted" t-esc="partner.mobile"/>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- 加载指示器 -->
+                                    <div t-if="state.isSearchingPartner" class="position-absolute end-0 top-0 mt-2 me-2">
+                                        <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                            <span class="visually-hidden">搜索中...</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 送货地址选择 -->
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">地址:</label>
+                                <div class="position-relative">
+                                    <!-- 如果已选择公司，显示地址下拉列表 -->
+                                    <select t-if="state.selectedPartner &amp;&amp; state.addressSearchResults.length > 0"
+                                            class="form-select"
+                                            t-on-change="(ev) => selectAddressById(ev.target.value)">
+                                        <option value="">-- 选择地址 --</option>
+                                        <t t-foreach="state.addressSearchResults" t-as="address" t-key="address.id">
+                                            <option t-att-value="address.id">
+                                                <t t-esc="address.name"/> 
+                                                <t t-if="address.city"> (<t t-esc="address.city"/>)</t>
+                                            </option>
+                                        </t>
+                                    </select>
+                                    
+                                    <!-- 如果已选择公司但没有地址 -->
+                                    <span t-elif="state.selectedPartner" class="text-muted d-block mt-2">
+                                        该公司暂无其他地址-显示默认地址
+                                    </span>
+                                    
+                                    <!-- 如果未选择公司 -->
+                                    <span t-else="" class="text-muted d-block mt-2">
+                                        请先选择客户公司
+                                    </span>
+                                    
+                                    <!-- 加载指示器 -->
+                                    <div t-if="state.isSearchingAddress" class="position-absolute end-0 top-0 mt-2 me-2">
+                                        <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                            <span class="visually-hidden">加载中...</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- 显示选中地址的详细信息 -->
+                                <div t-if="state.selectedAddress" class="mt-2 alert alert-light p-2">
+                                    <small class="text-muted">
+                                        <i class="fa fa-map-marker-alt me-1"></i>
+                                        <t t-if="state.selectedAddress.street">
+                                            <t t-esc="state.selectedAddress.street"/>
+                                            <t t-if="state.selectedAddress.street2">, <t t-esc="state.selectedAddress.street2"/></t>
+                                            <t t-if="state.selectedAddress.city">, <t t-esc="state.selectedAddress.city"/></t>
+                                            <t t-if="state.selectedAddress.state_id">, <t t-esc="state.selectedAddress.state_id[1]"/></t>
+                                            <t t-if="state.selectedAddress.zip"> <t t-esc="state.selectedAddress.zip"/></t>
+                                            <t t-if="state.selectedAddress.country_id">, <t t-esc="state.selectedAddress.country_id[1]"/></t>
+                                        </t>
+                                        <t t-else="">
+                                            无详细地址
+                                        </t>
+                                    </small>
+                                </div>
+                            </div>
+                            
+                            <!-- 联系人选择 -->
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">联系人:</label>
+                                <div class="position-relative">
+                                    <!-- 如果已选择公司，显示联系人下拉列表 -->
+                                    <select t-if="state.selectedPartner &amp;&amp; state.contactSearchResults.length > 0"
+                                            class="form-select"
+                                            t-on-change="(ev) => selectContactById(ev.target.value)">
+                                        <option value="">-- 选择联系人 --</option>
+                                        <t t-foreach="state.contactSearchResults" t-as="contact" t-key="contact.id">
+                                            <option t-att-value="contact.id">
+                                                <t t-esc="contact.name"/> 
+                                                <t t-if="contact.function"> (<t t-esc="contact.function"/>)</t>
+                                            </option>
+                                        </t>
+                                    </select>
+                                    
+                                    <!-- 如果已选择公司但没有联系人 -->
+                                    <span t-elif="state.selectedPartner" class="text-muted d-block mt-2">
+                                        该公司暂无联系人
+                                    </span>
+                                    
+                                    <!-- 如果未选择公司 -->
+                                    <span t-else="" class="text-muted d-block mt-2">
+                                        请先选择客户公司
+                                    </span>
+                                    
+                                    <!-- 加载指示器 -->
+                                    <div t-if="state.isSearchingContact" class="position-absolute end-0 top-0 mt-2 me-2">
+                                        <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                            <span class="visually-hidden">加载中...</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- 显示选中联系人的详细信息 -->
+                                <div t-if="state.selectedContact" class="mt-2 alert alert-light p-2">
+                                    <div class="d-flex flex-column">
+                                        <small class="text-muted mb-1">
+                                            <i class="fa fa-phone me-1"></i>
+                                            <t t-if="state.selectedContact.mobile">
+                                                <t t-esc="state.selectedContact.mobile"/>
+                                            </t>
+                                            <t t-else="">
+                                                无手机号
+                                            </t>
+                                        </small>
+                                        <small class="text-muted">
+                                            <i class="fa fa-envelope me-1"></i>
+                                            <t t-if="state.selectedContact.email">
+                                                <t t-esc="state.selectedContact.email"/>
+                                            </t>
+                                            <t t-else="">
+                                                无邮箱
+                                            </t>
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 订单信息卡片 -->
+                <div class="col-md-4 mb-4">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0"><i class="fa fa-file-invoice me-2"></i>报价单信息</h5>
+                        </div>
+                        <div class="card-body">
+                            <!-- 报价单搜索 -->
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">选择报价单:</label>
+                                <div class="position-relative">
+                                    <input type="text" 
+                                           class="form-control" 
+                                           t-model="state.saleOrderSearchTerm"
+                                           t-on-input="(ev) => searchQuotations(ev.target.value)"
+                                           placeholder="输入报价单号或客户名称..."
+                                           autocomplete="off"/>
+                                    
+                                    <!-- 加载指示器 -->
+                                    <div t-if="state.isSearchingSaleOrder" class="position-absolute end-0 top-0 mt-2 me-2">
+                                        <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                            <span class="visually-hidden">搜索中...</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- 搜索结果下拉框 -->
+                                    <div t-if="state.saleOrderSearchResults.length > 0" 
+                                         class="position-absolute start-0 mt-1 w-100 bg-white border rounded shadow-sm" 
+                                         style="z-index: 1000; max-height: 200px; overflow-y: auto;">
+                                        <div t-foreach="state.saleOrderSearchResults" t-as="order" t-key="order.id"
+                                             class="p-2 border-bottom hover-bg-light cursor-pointer"
+                                             t-on-click="() => selectQuotation(order)">
+                                            <div><strong t-esc="order.name"/></div>
+                                            <div class="small text-muted">
+                                                客户: <t t-esc="order.partner_id[1]"/>
+                                            </div>
+                                            <div class="small text-muted">
+                                                日期: <t t-esc="formatDate(order.date_order)"/>
+                                            </div>
+                                            <div class="small text-muted">
+                                                产品行数: <t t-esc="order.order_line ? order.order_line.length : 0"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 选中的报价单信息 -->
+                            <div t-if="state.selectedQuotation" class="alert alert-info mt-3">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <strong>已选择报价单:</strong>
+                                    <span class="badge "><t t-esc="state.selectedQuotation.name"/></span>
+                                </div>
+                                <div class="small">
+                                    <div class="mb-1">客户: <t t-esc="state.selectedQuotation.partner_id[1]"/></div>
+                                    <div class="mb-1">日期: <t t-esc="formatDate(state.selectedQuotation.date_order)"/></div>
+                                    <div>产品行数: <t t-esc="state.selectedQuotation.order_line ? state.selectedQuotation.order_line.length : 0"/></div>
+                                </div>
+                            </div>
+                            
+                            <!-- 报价日期 -->
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">报价日期:</label>
+                                <input type="date" 
+                                       class="form-control" 
+                                       t-model="state.date"/>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 报价人信息卡片 -->
+                <div class="col-md-4 mb-4">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0"><i class="fa fa-user me-2"></i>报价人信息</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">姓名:</label>
+                                <div class="form-control-plaintext" t-esc="state.user || '未知'"></div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <i class="fa fa-phone me-1"></i>
+                                <label class="form-label fw-bold">手机:</label>
+                                <div class="form-control-plaintext" t-esc="state.userMobile || '无'"></div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                 <i class="fa fa-envelope me-1"></i>
+                                <label class="form-label fw-bold">邮箱:</label>
+                                <div class="form-control-plaintext" t-esc="state.userEmail || '无'"></div>
+                            </div>
+                            
+                            <div>
+                                <label class="form-label fw-bold">公司地址:</label>
+                                <div class="form-control-plaintext small" t-esc="state.userCompanyAddress || '无'"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 产品选择和报价表 -->
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="fa fa-shopping-cart me-2"></i>产品与报价</h5>
+                </div>
+                <div class="card-body">
+                    <!-- 产品选择部分 -->
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <div class="form-group mb-3">
+                                <label for="categorySelect" class="form-label fw-bold">选择产品类别</label>
+                                <select class="form-select" id="categorySelect" 
+                                        t-on-change="(ev) => searchProductsByCategory(ev.target.value)">
+                                    <option value="">-- 请选择产品类别 --</option>
+                                    <t t-foreach="state.categories" t-as="category" t-key="category.id">
+                                        <option t-att-value="category.id">
+                                            <t t-esc="category.display_name"/>
+                                        </option>
+                                    </t>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="form-group mb-3">
+                                <label for="productSelect" class="form-label fw-bold">选择产品</label>
+                                <select class="form-select" id="productSelect" t-on-change="onProductChange" 
+                                        t-att-disabled="!state.productSearchResults.length &amp;&amp; !state.selectedCategoryId">
+                                    <option value="">-- 请先选择产品类别 --</option>
+                                    <t t-if="state.productSearchResults.length > 0">
+                                        <t t-foreach="state.productSearchResults" t-as="product" t-key="product.id">
+                                            <option t-att-value="product.id">
+                                                <t t-esc="product.name"/> 
+                                                (¥<t t-esc="formatCurrency(product.list_price)"/>)
+                                            </option>
+                                        </t>
+                                    </t>
+                                </select>
+                            </div>
+                        </div>
+ 
+                    </div>
+                    
+                    <!-- 报价表 -->
+                    <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
+                        <table class="table table-bordered table-hover">
+                            <thead class="table-light sticky-top" style="position: sticky; top: 0; z-index: 1;">
+                                <tr>
+                                    <th scope="col" class="text-center" style="width: 50px;">#</th>
+                                    <th scope="col" class="text-center" style="width: 30px;"></th>
+                                    <th scope="col">产品名称</th>
+                                    <th scope="col">产品类别</th>
+                                    <th scope="col">型号</th>
+                                    <th scope="col">规格(D|H)</th>
+                                    <th scope="col">颜色</th>
+                                    <th scope="col">颜色备注</th>
+                                    <th scope="col">重量</th>
+                                    <th scope="col" class="text-end" style="width: 120px;">重量单价(¥)</th>
+                                    <th scope="col" class="text-end" style="width: 120px;">产品单价(¥)</th>
+                                    <th scope="col" class="text-center" style="width: 80px;">数量</th>
+                                    <th scope="col" class="text-end" style="width: 120px;">小计</th>
+                                    <th scope="col" class="text-center" style="width: 100px;">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody class="table-secondary">
+                                <tr t-if="state.products.length === 0">
+                                    <td colspan="13" class="text-center py-4 text-muted">暂无产品，请添加产品到报价单</td>
+                                </tr>
+                               <tr t-foreach="state.products" 
+                                    t-as="product" 
+                                    t-key="product_index"
+                                    t-att-class="isDescriptionLine(product) ? 'description-line' : ''"
+                                    t-on-dragover="(ev) => handleDragOver(ev, product_index)"
+                                    t-on-drop="(ev) => handleDrop(ev, product_index)">
+                                    <td class="text-center align-middle" t-esc="product_index + 1"/>
+                                   <td class="text-center align-middle handle-cell">
+                                        <div class="drag-handle" 
+                                             draggable="true" 
+                                             t-on-dragstart="(ev) => handleDragStart(ev, product_index)"
+                                             title="拖动排序">
+                                            <i class="fa fa-bars text-muted"></i>
+                                        </div>
+                                    </td>
+                                     <td class="align-middle" t-att-colspan="isDescriptionLine(product) ? 11 : 1">
+                                        <t t-if="isDescriptionLine(product)">
+                                            <input type="text" class="form-control form-control-sm" 
+                                                   t-att-value="product.product_name"
+                                                   t-on-input="(ev) => updateCustomProductName(product_index, ev.target.value)"
+                                                   placeholder="输入小节内容"/>
+                                        </t>
+                                        <t t-elif="product.isCustom">
+                                            <input type="text" class="form-control form-control-sm" 
+                                                   t-att-value="product.product_name"
+                                                   t-on-input="(ev) => updateCustomProductName(product_index, ev.target.value)"
+                                                   placeholder="新产品"/>
+                                        </t>
+                                        <t t-else="">
+                                            <t t-esc="product.product_name"/>
+                                        </t>
+                                    </td>
+                                    <t t-if="!isDescriptionLine(product)">
+                                    <td class="align-middle">
+                                        <t t-if="product.categ_id">
+                                            <t t-esc="Array.isArray(product.categ_id) ? product.categ_id[1] : ''"/>
+                                        </t>
+                                        <t t-elif="product.isCustom">
+                                            <input type="text" class="form-control form-control-sm" 
+                                                   placeholder="输入类别"
+                                                   t-att-value="product.category"
+                                                   t-on-input="(ev) => updateCustomProductCategory(product_index, ev.target.value)"/>
+                                        </t>
+                                    </td>
+                                    <td class="align-middle">
+                                        <t t-if="product.isCustom">
+                                            <input type="text" class="form-control form-control-sm" 
+                                                   placeholder="输入型号"
+                                                   t-att-value="product.model_name"
+                                                   t-on-input="(ev) => updateCustomProductModelName(product_index, ev.target.value)"/>
+                                        </t>
+                                        <t t-elif="product.product_id &amp;&amp; state.uniqueModelNamesByProduct[product.product_id] &amp;&amp; state.uniqueModelNamesByProduct[product.product_id].length > 0">
+                                            <select class="form-select form-select-sm" 
+                                                    t-on-change="(ev) => selectProductModel(product_index, ev.target.value)">
+                                                <option value="">-- 选择型号 --</option>
+                                                <t t-foreach="state.uniqueModelNamesByProduct[product.product_id]" t-as="modelName" t-key="modelName">
+                                                    <option t-att-value="modelName" t-att-selected="modelName === product.model_name">
+                                                        <t t-esc="modelName"/>
+                                                    </option>
+                                                </t>
+                                            </select>
+                                        </t>
+                                        <t t-else="">
+                                            <span class="text-muted">无可用型号</span>
+                                        </t>
+                                    </td>
+                                    <td class="align-middle">
+                                        <t t-if="product.isCustom">
+                                            <input type="text" class="form-control form-control-sm" 
+                                                   placeholder="输入规格"
+                                                   t-att-value="product.userInputSpec"
+                                                   t-on-input="(ev) => updateCustomProductSpec(product_index, ev.target.value)"/>
+                                        </t>
+                                        <t t-else="">
+                                            <!-- 在规格输入框下方添加匹配成功信息提示 -->
+                                           <div class="position-relative">
+                                            <input type="text" class="form-control form-control-sm" 
+                                                   placeholder="格式: 数字mm|数字mm"
+                                                   t-att-value="product.userInputSpec"
+                                                   t-on-input="(ev) => handleSpecInput(product_index, ev.target.value)"/>
+                                                   
+                                            <!-- 显示格式错误 -->
+                                            <div t-if="product.specFormatError || product.specMatchError" class="spec-error-container">
+                                                <div t-if="product.specFormatError" class="spec-format-error text-danger">
+                                                    <t t-esc="product.specFormatError"/>
+                                                </div>
+                                                <div t-if="product.specMatchError" class="spec-match-error text-danger">
+                                                    <t t-esc="product.specMatchError"/>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- 显示匹配成功信息 -->
+                                            <div t-if="product.matchSuccess" class="mt-1">
+                                                <small class="text-success">
+                                                    <i class="fa fa-check-circle"></i> 
+                                                    <span t-esc="product.matchSuccess"></span>
+                                                </small>
+                                            </div>
+                                            
+                                          
+                                        </div>
+                                        </t>
+                                    </td>
+                                    <td class="align-middle">
+                                        <select class="form-select form-select-sm" 
+                                                t-on-change="(ev) => updateProductColor(product_index, ev.target.value)">
+                                            <option value="">-- 选择颜色 --</option>
+                                            <t t-foreach="state.colors" t-as="color" t-key="color.id">
+                                                <option t-att-value="color.id" t-att-selected="color.id === product.color_id">
+                                                    <t t-esc="color.name"/>
+                                                </option>
+                                            </t>
+                                        </select>
+                                    </td>
+                                    <td class="align-middle">
+                                        <!-- 显示颜色备注 -->
+                                        <t t-if="product.color_notes">
+                                            <span><t t-esc="product.color_notes"/></span>
+                                        </t>
+                                        <t t-else="">
+                                            <span class="text-muted">-</span>
+                                        </t>
+                                    </td>
+                                    <td class="align-middle">
+                                        <t t-if="product.isCustom">
+                                            <!-- 自定义产品的重量输入 -->
+                                            <input type="number" class="form-control form-control-sm" 
+                                                   placeholder="输入重量(kg)"
+                                                   t-att-value="product.weight"
+                                                   t-on-input="(ev) => updateCustomProductWeight(product_index, ev.target.value)"
+                                                   step="0.01" min="0"/>
+                                        </t>
+                                        <t t-else="">
+                                            <!-- 非自定义产品显示重量 -->
+                                            <t t-if="product.weight">
+                                                <t t-esc="product.weight"/>
+                                            </t>
+                                            <t t-else="">
+                                                -
+                                            </t>
+                                        </t>
+                                    </td>
+                                    <td class="text-end align-middle">
+                                        <input type="number" class="form-control form-control-sm text-end" 
+                                               t-att-value="product.weight_unit_price !== null ? product.weight_unit_price : ''"
+                                               t-on-input="(ev) => updateWeightUnitPrice(product_index, ev.target.value)"
+                                               step="0.01" min="0"
+                                               placeholder="输入重量单价"/>
+                                    </td>
+                                   <td class="text-end align-middle">
+                                    <div class="fw-bold">¥ <t t-esc="formatCurrency(product.unit_price || 0)"/></div>
+                                  
+                                </td>
+                                    <td class="text-center align-middle">
+                                       <input type="number" class="form-control form-control-sm text-center" 
+                                           t-att-value="product.quantity !== null ? product.quantity : ''"
+                                           t-on-input="(ev) => updateProductQuantity(product_index, ev.target.value)"
+                                           min="1"
+                                           placeholder="输入数量"/>
+                                    </td>
+                                    <td class="text-end align-middle fw-bold">¥ <t t-esc="formatCurrency(product.total_price)"/></td>
+                                    </t>
+                                    <td class="text-center align-middle">
+                                        <button class="btn btn-sm btn-outline-danger" 
+                                                t-on-click="() => removeProduct(product_index)">
+                                            <i class="fa fa-trash"></i>
+                                        </button>
+                                    </td>
+                                    
+                                </tr>
+                            </tbody>
+                            <tfoot class="table-light" style="position: sticky; bottom: 0; z-index: 1;">
+                                <tr>
+                                    <td colspan="7">
+                                        <button class="btn btn-outline-primary" t-on-click="addCustomProduct">
+                                            <i class="fa fa-plus me-1"></i> 添加自定义产品
+                                        </button>
+                                        <button class="btn btn-outline-secondary ms-2" t-on-click="addDescriptionLine">
+                                            <i class="fa fa-comment me-1"></i> 添加小节行
+                                        </button>
+                                    </td>
+                                    <td colspan="2" class="text-end fw-bold">总重量:<t t-esc="state.totalWeight.toFixed(2)"/> kg</td>
+                                    <td class="text-end fw-bold"></td>
+                                    <td class="text-end fw-bold">总计:</td>
+                                    <td class="text-end fw-bold fs-5">¥ <t t-esc="formatCurrency(state.totalAmount)"/></td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 页脚部分 -->
+            <div class="card mb-4 shadow-sm">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h5 class="mb-3">备注:</h5>
+                            <div class="alert alert-light">
+                                <p class="mb-1">1. 此报价单有效期为7天</p>
+                                <p class="mb-1">2. 最终价格以合同为准</p>
+                                <p class="mb-0">3. 如有疑问，请联系报价人</p>
+                            </div>
+                           
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end justify-content-end">
+                            <button class="btn btn-secondary me-2" t-on-click="() => this.action.doAction('quote_system.action_quote_system')">
+                                <i class="fa fa-arrow-left me-1"></i> 返回
+                            </button>
+                            <!-- 简化的创建/更新按钮 -->
+                           
+                            <button class="btn btn-primary" 
+                                    t-on-click="state.selectedQuotation ? updateQuotation : createQuotation" 
+                                    t-att-disabled="state.isCreating || state.isUpdating">
+                                <t t-if="state.isCreating || state.isUpdating">
+                                    <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                                    <span t-esc="state.selectedQuotation ? '更新中...' : '创建中...'"/>
+                                </t>
+                                <t t-else="">
+                                    <i class="fa fa-save me-1"></i> 
+                                    <span t-esc="state.selectedQuotation ? '更新报价单' : '创建报价单'"/>
+                                </t>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </t>
+</templates>

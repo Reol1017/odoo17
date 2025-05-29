@@ -1,0 +1,11 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_document_document_user,document.document.user,model_document_document,file_management.group_document_user,1,1,1,0
+access_document_document_manager,document.document.manager,model_document_document,file_management.group_document_manager,1,1,1,1
+access_document_category_user,document.category.user,model_document_category,file_management.group_document_user,1,0,0,0
+access_document_category_manager,document.category.manager,model_document_category,file_management.group_document_manager,1,1,1,1
+access_document_tag_user,document.tag.user,model_document_tag,file_management.group_document_user,1,1,1,0
+access_document_tag_manager,document.tag.manager,model_document_tag,file_management.group_document_manager,1,1,1,1
+access_document_drawing_user,document.drawing.user,model_document_drawing,file_management.group_document_user,1,1,1,0
+access_document_drawing_manager,document.drawing.manager,model_document_drawing,file_management.group_document_manager,1,1,1,1
+access_document_contract_user,document.contract.user,model_document_contract,file_management.group_document_user,1,1,1,0
+access_document_contract_manager,document.contract.manager,model_document_contract,file_management.group_document_manager,1,1,1,1

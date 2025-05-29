@@ -1,0 +1,17 @@
+<odoo>
+    <record id="action_open_purchase_order_wizard" model="ir.ui.view">
+        <field name="name">sale.order.form.inherit</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <!-- 定位确认按钮，插入新按钮 -->
+            <xpath expr="//header/button[@name='action_confirm']" position="before">
+                <button name="action_open_purchase_order_wizard"
+                        type="object"
+                        string="生成采购订单"
+                        class="oe_highlight"
+                        />
+            </xpath>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,33 @@
+<odoo>
+    <!-- 扩展线索表单视图，添加费用智能按钮和费用关联 -->
+    <record id="crm_lead_view_form_expense" model="ir.ui.view">
+        <field name="name">crm.lead.view.form.expense</field>
+        <field name="model">crm.lead</field>
+        <field name="inherit_id" ref="crm.crm_lead_view_form"/>
+        <field name="arch" type="xml">
+            <!-- 在按钮框中添加费用智能按钮 -->
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button class="oe_stat_button" name="action_view_expenses" type="object" icon="fa-money"
+                        invisible="expense_count == 0">
+                    <field string="费用" name="expense_count" widget="statinfo"/>
+                </button>
+            </xpath>
+            
+            <!-- 在"lead"页面后添加新的页面 -->
+            <xpath expr="//notebook/page[@name='internal_notes']" position="after">
+                <page string="相关费用" name="expenses">
+                    <field name="expense_ids" widget="many2many" options="{'no_create': True}">
+                        <tree>
+                            <field name="name"/>
+                            <field name="employee_id"/>
+                            <field name="date"/>
+                            <field name="total_amount" sum="Total Amount"/>
+                            <field name="state"/>
+                            <field name="sheet_id"/>
+                        </tree>
+                    </field>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

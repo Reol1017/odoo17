@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+     <!-- 销售采购请求表单视图 -->
+    <record id="view_sale_purchase_request_form" model="ir.ui.view">
+        <field name="name">sale.purchase.request.form</field>
+        <field name="model">sale.purchase.request</field>
+        <field name="arch" type="xml">
+            <form string="采购请求">
+                <header>
+                    <button name="action_confirm" string="确认" type="object" class="btn-primary" 
+                            invisible="state != 'draft'"
+                            groups="purchase.group_purchase_user"/>
+                    <button name="action_create_purchase_orders" string="创建采购订单" type="object" 
+                            class="btn-primary" 
+                            invisible="state not in ['waiting', 'purchasing']"
+                            groups="purchase.group_purchase_user"/>
+                    <button name="action_cancel" string="取消" type="object" 
+                            invisible="state in ['done', 'cancel']"
+                            groups="purchase.group_purchase_user"/>
+                    <button name="action_reset_to_draft" string="重置为草稿" type="object"
+                            invisible="state not in ['waiting', 'cancel', 'purchasing', 'purchased']"
+                            groups="purchase.group_purchase_user"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,waiting,purchasing,purchased,done"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_purchase_orders" type="object" 
+                                class="oe_stat_button" icon="fa-shopping-cart" 
+                                invisible="purchase_count == 0"
+                                groups="purchase.group_purchase_user">
+                            <field name="purchase_count" widget="statinfo" string="采购订单"/>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="sale_order_id" readonly="1"/>
+                            <field name="requester_id" readonly="1"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                        <group>
+                            <field name="date_request" readonly="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="请求行">
+                            <field name="sale_line_ids">
+                                <tree editable="bottom">
+                                    <field name="product_id"/>
+                                    <field name="name"/>
+                                    <field name="product_uom_qty" string="请求数量"/>
+                                    <field name="qty_purchased" string="已采购数量"/>
+                                    <field name="qty_remaining" string="剩余数量"/>
+                                    <field name="product_uom"/>
+                                </tree>
+                            </field>
+                        </page>
+                        <page string="相关采购订单" groups="purchase.group_purchase_user">
+                            <field name="purchase_ids">
+                                <tree>
+                                    <field name="name"/>
+                                    <field name="partner_id"/>
+                                    <field name="date_order"/>
+                                    <field name="amount_total"/>
+                                    <field name="state"/>
+                                </tree>
+                            </field>
+                        </page>
+                        <page string="备注">
+                            <field name="notes"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="activity_ids" widget="mail_activity"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <!-- 销售采购请求树视图 -->
+    <record id="view_sale_purchase_request_tree" model="ir.ui.view">
+        <field name="name">sale.purchase.request.tree</field>
+        <field name="model">sale.purchase.request</field>
+        <field name="arch" type="xml">
+            <tree string="采购请求" 
+                  decoration-info="state == 'draft'" 
+                  decoration-warning="state == 'waiting'" 
+                  decoration-primary="state == 'purchasing'"
+                  decoration-bf="state == 'purchased'"
+                  decoration-success="state == 'done'" 
+                  decoration-muted="state == 'cancel'">
+                <field name="name"/>
+                <field name="sale_order_id"/>
+                <field name="requester_id"/>
+                <field name="date_request"/>
+                <field name="state"/>
+                <field name="purchase_count"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- 销售采购请求搜索视图 -->
+    <record id="view_sale_purchase_request_search" model="ir.ui.view">
+        <field name="name">sale.purchase.request.search</field>
+        <field name="model">sale.purchase.request</field>
+        <field name="arch" type="xml">
+            <search string="搜索采购请求">
+                <field name="name"/>
+                <field name="sale_order_id"/>
+                <field name="requester_id"/>
+                <separator/>
+                <filter string="草稿" name="draft" domain="[('state', '=', 'draft')]"/>
+                <filter string="等待处理" name="waiting" domain="[('state', '=', 'waiting')]"/>
+                <filter string="采购中" name="purchasing" domain="[('state', '=', 'purchasing')]"/>
+                <filter string="采购完成" name="purchased" domain="[('state', '=', 'purchased')]"/>
+                <filter string="已完成" name="done" domain="[('state', '=', 'done')]"/>
+                <filter string="已取消" name="cancel" domain="[('state', '=', 'cancel')]"/>
+                <group expand="0" string="分组依据">
+                    <filter string="状态" name="group_by_state" domain="[]" context="{'group_by': 'state'}"/>
+                    <filter string="销售订单" name="group_by_sale_order" domain="[]" context="{'group_by': 'sale_order_id'}"/>
+                    <filter string="请求人" name="group_by_requester" domain="[]" context="{'group_by': 'requester_id'}"/>
+                    <filter string="请求日期" name="group_by_date" domain="[]" context="{'group_by': 'date_request'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+</odoo>

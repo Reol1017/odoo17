@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- 分配供应商向导表单 -->
+    <record id="view_sale_purchase_assign_supplier_form" model="ir.ui.view">
+        <field name="name">sale.purchase.assign.supplier.form</field>
+        <field name="model">sale.purchase.assign.supplier</field>
+        <field name="arch" type="xml">
+            <form string="分配供应商">
+                <group>
+                    <field name="request_line_id" invisible="1"/>
+                    <field name="product_id" readonly="1"/>
+                    <field name="total_quantity" readonly="1" />
+                    <field name="purchased_quantity" readonly="1" />
+                    <field name="remaining_quantity" readonly="1" />
+                    <field name="quantity" />
+                    <field name="supplier_id" options="{'no_create': True}" />
+                    <field name="purchase_state" widget="radio" />
+                </group>
+                <footer>
+                    <button name="action_confirm" string="确认" type="object" class="btn-primary"/>
+                    <button string="取消" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- 创建采购订单向导表单 -->
+    <record id="view_sale_purchase_create_po_form" model="ir.ui.view">
+        <field name="name">sale.purchase.create.po.form</field>
+        <field name="model">sale.purchase.create.po</field>
+        <field name="arch" type="xml">
+            <form string="创建采购订单">
+                <group>
+                    <field name="request_id" invisible="1"/>
+                    <field name="supplier_id" options="{'no_create': True}" />
+                    <field name="purchase_state" widget="radio" />
+                </group>
+                <field name="line_ids">
+                    <tree editable="bottom">
+                        <field name="request_line_id" column_invisible="1"/>
+                        <field name="product_id"/>
+                        <field name="name"/>
+                        <field name="product_uom_qty" string="总数量"/>
+                        <field name="qty_purchased" string="已采购数量"/>
+                        <field name="qty_remaining" string="剩余数量"/>
+                        <field name="quantity" string="本次采购数量"/>
+                        <field name="product_uom"/>
+                    </tree>
+                </field>
+                <footer>
+                    <button name="action_confirm" string="创建采购订单" type="object" class="btn-primary"/>
+                    <button string="取消" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- 自动通知服务器动作 -->
+    <record id="action_server_notify_purchase_team" model="ir.actions.server">
+        <field name="name">销售订单确认时通知采购</field>
+        <field name="model_id" ref="sale.model_sale_order"/>
+        <field name="trigger">on_write</field>
+        <field name="trigger_condition">state != 'sale' and record.state == 'sale'</field>
+        <field name="state">code</field>
+        <field name="code">
+if record:
+    # 检查是否有可采购的产品
+    purchase_lines = record.order_line.filtered(lambda l: l.product_id.type in ['product', 'consu'])
+    if purchase_lines:
+        # 获取采购用户组
+        purchase_users = env.ref('purchase.group_purchase_user').users
+        if purchase_users:
+            # 创建通知消息
+            note = _('销售订单 %s 已确认，可能需要采购处理') % record.name
+            record.message_post(
+                body=note,
+                partner_ids=purchase_users.mapped('partner_id').ids,
+                subtype_id=env.ref('mail.mt_note').id,
+                message_type='notification'
+            )
+        </field>
+    </record>
+</odoo>

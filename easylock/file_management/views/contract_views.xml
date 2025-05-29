@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- 合同表单视图 -->
+    <record id="view_contract_form" model="ir.ui.view">
+        <field name="name">document.contract.form</field>
+        <field name="model">document.contract</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_send" string="发送" type="object" invisible="contract_state != 'draft'" class="oe_highlight"/>
+                    <button name="action_sign" string="签署" type="object" invisible="contract_state != 'sent'" class="oe_highlight"/>
+                    <button name="action_activate" string="激活" type="object" invisible="contract_state != 'signed'" class="oe_highlight"/>
+                    <button name="action_expire" string="设为过期" type="object" invisible="contract_state != 'active'"/>
+                    <button name="action_terminate" string="终止" type="object" invisible="contract_state not in ('active', 'signed')"/>
+                    <field name="contract_state" widget="statusbar" statusbar_visible="draft,sent,signed,active"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <!-- 智能按钮可以添加在这里 -->
+                    </div>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="合同名称"/>
+                        </h1>
+                        <h3>
+                            <field name="document_number" placeholder="合同编号"/>
+                            <span class="ml-2">版本: <field name="version" class="oe_inline"/></span>
+                        </h3>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="contract_type"/>
+                            <field name="partner_id"/>
+                            <field name="amount_total"/>
+                            <field name="currency_id" options="{'no_create': True}"/>
+                            <field name="payment_term_id"/>
+                            <field name="category_id" domain="[('is_contract', '=', True)]"/>
+                            <field name="file" filename="filename"/>
+                            <field name="filename" invisible="1"/>
+                            <field name="tag_ids" widget="many2many_tags" options="{'color_field': 'color'}"/>
+                        </group>
+                        <group>
+                            <field name="date_start"/>
+                            <field name="date_end"/>
+                            <field name="user_id"/>
+                            <field name="signing_date" invisible="contract_state not in ('signed', 'active', 'expired', 'terminated')"/>
+                            <field name="signer_id" invisible="contract_state not in ('signed', 'active', 'expired', 'terminated')"/>
+                            <field name="document_id" invisible="1"/>
+                            <field name="state" invisible="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="条款与条件">
+                            <field name="terms_conditions" placeholder="输入合同条款和条件..."/>
+                        </page>
+                        <page string="描述">
+                            <field name="description" placeholder="输入合同描述..."/>
+                        </page>
+                        <page string="关联信息">
+                            <group>
+                                <field name="product_id"/>
+                                <field name="project_id"/>
+                                <field name="sale_order_id"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <!-- 合同树形视图 -->
+    <record id="view_contract_tree" model="ir.ui.view">
+        <field name="name">document.contract.tree</field>
+        <field name="model">document.contract</field>
+        <field name="arch" type="xml">
+            <tree decoration-success="contract_state == 'active'" decoration-warning="contract_state == 'sent'" decoration-info="contract_state == 'signed'" decoration-muted="contract_state in ('expired', 'terminated')">
+                <field name="document_number"/>
+                <field name="name"/>
+                <field name="contract_type"/>
+                <field name="partner_id"/>
+                <field name="date_start"/>
+                <field name="date_end"/>
+                <field name="amount_total"/>
+                <field name="currency_id"/>
+                <field name="user_id"/>
+                <field name="contract_state"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- 合同搜索视图 -->
+    <record id="view_contract_search" model="ir.ui.view">
+        <field name="name">document.contract.search</field>
+        <field name="model">document.contract</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="document_number"/>
+                <field name="partner_id"/>
+                <field name="user_id"/>
+                <field name="contract_type"/>
+                <filter string="我的合同" name="my_contracts" domain="[('user_id', '=', uid)]"/>
+                <filter string="草稿" name="draft" domain="[('contract_state', '=', 'draft')]"/>
+                <filter string="已发送" name="sent" domain="[('contract_state', '=', 'sent')]"/>
+                <filter string="已签署" name="signed" domain="[('contract_state', '=', 'signed')]"/>
+                <filter string="生效中" name="active" domain="[('contract_state', '=', 'active')]"/>
+                <filter string="已过期" name="expired" domain="[('contract_state', '=', 'expired')]"/>
+                <filter string="已终止" name="terminated" domain="[('contract_state', '=', 'terminated')]"/>
+                <group expand="0" string="分组依据">
+                    <filter string="合同类型" name="groupby_type" context="{'group_by': 'contract_type'}"/>
+                    <filter string="客户" name="groupby_partner" context="{'group_by': 'partner_id'}"/>
+                    <filter string="负责人" name="groupby_user" context="{'group_by': 'user_id'}"/>
+                    <filter string="状态" name="groupby_state" context="{'group_by': 'contract_state'}"/>
+                    <filter string="开始日期" name="groupby_date_start" context="{'group_by': 'date_start:month'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- 合同操作窗口 -->
+    <record id="action_contract" model="ir.actions.act_window">
+        <field name="name">合同</field>
+        <field name="res_model">document.contract</field>
+        <field name="view_mode">tree,form</field>
+        <field name="context">{'search_default_my_contracts': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                创建您的第一个合同
+            </p>
+            <p>
+                管理公司的各类合同，包括销售合同、采购合同、服务合同等。
+            </p>
+        </field>
+    </record>
+</odoo>

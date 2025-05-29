@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- 创建安全组 -->
+    <record id="group_sale_purchase_request" model="res.groups">
+        <field name="name">销售采购请求</field>
+        <field name="category_id" ref="base.module_category_sales_sales"/>
+        <field name="implied_ids" eval="[(4, ref('sales_team.group_sale_salesman'))]"/>
+    </record>
+
+    <!-- 记录规则 -->
+    <record id="rule_sale_purchase_request_salesman" model="ir.rule">
+        <field name="name">销售员只能查看自己的采购请求</field>
+        <field name="model_id" ref="model_sale_purchase_request"/>
+        <field name="domain_force">[('requester_id','=',user.id)]</field>
+        <field name="groups" eval="[(4, ref('sales_team.group_sale_salesman'))]"/>
+    </record>
+
+    <record id="rule_sale_purchase_request_salesman_all" model="ir.rule">
+        <field name="name">销售经理可查看所有采购请求</field>
+        <field name="model_id" ref="model_sale_purchase_request"/>
+        <field name="domain_force">[(1,'=',1)]</field>
+        <field name="groups" eval="[(4, ref('sales_team.group_sale_manager'))]"/>
+    </record>
+
+    <record id="rule_sale_purchase_request_purchase" model="ir.rule">
+        <field name="name">采购人员可查看所有采购请求</field>
+        <field name="model_id" ref="model_sale_purchase_request"/>
+        <field name="domain_force">[(1,'=',1)]</field>
+        <field name="groups" eval="[(4, ref('purchase.group_purchase_user'))]"/>
+    </record>
+</odoo>

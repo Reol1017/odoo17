@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="view_order_form" model="ir.ui.view">
+        <field name="name">sale.order.form</field>
+        <field name="model">sale.order</field>
+        <field name='inherit_id' ref="sale.view_order_form" />
+        <field name='arch' type="xml">
+            <button name="action_quotation_send" position="before">
+                <button
+                    type="object"
+                    name="action_manual_delivery_wizard"
+                    class="btn btn-primary"
+                    string="Create Delivery"
+                    context="{'active_model': 'sale.order', 'active_id': id, 'active_ids': [id]}"
+                    invisible="not has_pending_delivery or not manual_delivery or state != 'sale'"
+                />
+            </button>
+            <group name="sale_shipping" position="inside">
+                <field name="manual_delivery" widget="boolean_toggle" />
+                <field name="has_pending_delivery" invisible="0" />
+            </group>
+        </field>
+    </record>
+    <record id="view_order_line_tree" model="ir.ui.view">
+        <field name="name">sale.order.line.tree</field>
+        <field name="model">sale.order.line</field>
+        <field name="inherit_id" ref="sale.view_order_line_tree" />
+        <field name="arch" type="xml">
+            <field name="qty_delivered" position="before">
+                <field name="qty_procured" string="已交付数量" options="{'precision': 0}"/>
+                <field name="qty_to_procure" string="未交付数量" options="{'precision': 0}"/>
+            </field>
+        </field>
+    </record>
+    <record id="view_sales_order_undelivered_line_filter" model="ir.ui.view">
+        <field name="name">sale.order.undelivered.line</field>
+        <field name="model">sale.order.line</field>
+        <field name="arch" type="xml">
+            <search string="Search Undelivered Lines">
+                <field name="order_id" />
+                <separator />
+                <filter
+                    string="按销售订单号分组"
+                    name="filter_orderid"
+                    
+                    context="{'group_by': 'order_id'}"
+                    help="Sales Order Lines that are confirmed, done or in exception state and no delivery is created to satisfy them"
+                />
+                <filter
+                    string="按客户分组"
+                    name="filter_partner"
+                    context="{'group_by': 'order_partner_id'}"
+                    help="按客户分组显示销售订单行"
+                />
+                <filter
+                    string="销售订单行"
+                    name="filter_unplanned"
+                    domain="[('state', '=', 'sale')]"
+                    
+                    help="Sales Order Lines that are confirmed, done or in exception state and no delivery is created to satisfy them"
+                />
+            </search>
+        </field>
+    </record>
+    <record id="action_order_line_delivery_tree" model="ir.actions.act_window">
+        <field name="name">手动发货管理</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">sale.order.line</field>
+        <field name="view_mode">tree</field>
+        <field name="search_view_id" ref="view_sales_order_undelivered_line_filter" />
+        <field name="context">{'group_by': ['order_partner_id', 'order_id'], 'search_default_filter_unplanned': 1}</field>
+        <field name="filter" eval="True" />
+        <field name="help" type="html">
+            <p>这里是要开具发票和出库单的每个销售订单行的列表。</p>
+        </field>
+    </record>
+    <menuitem
+        id="menu_delivery_sales_order_lines"
+        parent="sale.menu_sale_order"
+        action="action_order_line_delivery_tree"
+        sequence="99"
+        groups="sales_team.group_sale_salesman"
+    />
+</odoo>

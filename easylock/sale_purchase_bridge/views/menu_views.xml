@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- 销售菜单 -->
+    <record id="action_sale_purchase_requests" model="ir.actions.act_window">
+        <field name="name">采购请求</field>
+        <field name="res_model">sale.purchase.request</field>
+        <field name="view_mode">tree,form</field>
+        <field name="context">{'search_default_group_by_state': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                创建第一个采购请求
+            </p>
+        </field>
+    </record>
+
+    <menuitem id="menu_sale_purchase_request" 
+              name="采购请求" 
+              parent="sale.sale_order_menu" 
+              action="action_sale_purchase_requests" 
+              sequence="20"/>
+
+    <!-- 采购菜单 -->
+    <record id="action_purchase_sale_requests" model="ir.actions.act_window">
+        <field name="name">销售采购请求</field>
+        <field name="res_model">sale.purchase.request</field>
+        <field name="view_mode">tree,form</field>
+        <field name="domain">[('state', '=', 'waiting')]</field>
+        <field name="context">{'search_default_waiting': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_neutral_face">
+                没有待处理的销售采购请求
+            </p>
+        </field>
+    </record>
+
+    <!-- 将销售采购请求设置为采购模块的一级菜单 -->
+    <menuitem id="menu_purchase_sale_request_root" 
+              name="销售采购请求" 
+              parent="purchase.menu_purchase_root" 
+              action="action_purchase_sale_requests" 
+              sequence="1"/>
+    
+    <!-- 添加销售采购请求子菜单 -->
+    <menuitem id="menu_purchase_sale_request_waiting" 
+              name="待处理请求" 
+              parent="menu_purchase_sale_request_root"
+              action="action_purchase_sale_requests" 
+              sequence="1"/>
+              
+    <!-- 创建已确认请求菜单 -->
+    <record id="action_purchase_sale_requests_confirmed" model="ir.actions.act_window">
+        <field name="name">已确认请求</field>
+        <field name="res_model">sale.purchase.request</field>
+        <field name="view_mode">tree,form</field>
+        <field name="domain">[('state', 'in', ['purchasing', 'purchased', 'done'])]</field>
+        <field name="context">{'search_default_group_by_state': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_neutral_face">
+                没有已确认的销售采购请求
+            </p>
+        </field>
+    </record>
+    
+    <menuitem id="menu_purchase_sale_request_confirmed" 
+              name="已确认请求" 
+              parent="menu_purchase_sale_request_root"
+              action="action_purchase_sale_requests_confirmed" 
+              sequence="2"/>
+              
+    <!-- 创建全部采购请求菜单 -->
+    <record id="action_purchase_sale_requests_all" model="ir.actions.act_window">
+        <field name="name">全部采购请求</field>
+        <field name="res_model">sale.purchase.request</field>
+        <field name="view_mode">tree,form</field>
+        <field name="domain">[('state', '!=', 'draft')]</field>
+        <field name="context">{'search_default_group_by_state': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_neutral_face">
+                没有采购请求
+            </p>
+        </field>
+    </record>
+    
+    <menuitem id="menu_purchase_sale_request_all" 
+              name="全部采购请求" 
+              parent="menu_purchase_sale_request_root"
+              action="action_purchase_sale_requests_all" 
+              sequence="3"/>
+              
+    <!-- 将原采购菜单移到较后的序列 -->
+    <menuitem id="purchase.menu_purchase" name="采购订单" parent="purchase.menu_purchase_root" sequence="10"/>
+</odoo>

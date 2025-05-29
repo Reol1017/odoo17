@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="view_select_order_lines_form" model="ir.ui.view">
+        <field name="name">select.order.lines.form</field>
+        <field name="model">select.order.lines</field>
+        <field name="arch" type="xml">
+            <form string="选择订单行">
+                <field name="manual_delivery_id" invisible="1"/>
+                <field name="commercial_partner_id" invisible="1"/>
+                <!-- 修改域表达式，移除 qty_to_procure 条件 -->
+                <field name="line_ids" domain="[('order_id.partner_id', 'child_of', commercial_partner_id), ('product_id.type', '!=', 'service')]">
+                    <tree>
+                        <field name="order_id"/>
+                        <field name="name"/>
+                        <field name="product_id"/>
+                        <field name="product_uom_qty"/>
+                        <field name="qty_procured"/>
+                        <field name="qty_to_procure"/>
+                        <field name="price_unit"/>
+                    </tree>
+                </field>
+                <footer>
+                    <button name="add_lines" string="添加选中的订单行" type="object" class="btn-primary"/>
+                    <button string="取消" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_select_order_lines" model="ir.actions.act_window">
+        <field name="name">选择订单行</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">select.order.lines</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>

@@ -1,0 +1,21 @@
+{
+    "name": "手动发货管理",
+    "category": "Sale",
+    "author": "江西一方信息技术有限公司",
+    "license": "AGPL-3",
+    "version": "17.0.1.0.0",
+    "website": "https://ifangtech.com",
+    "summary": "创建手动发货管理",
+    "depends": ["stock_delivery", "sale_stock", "sales_team"],
+    "data": [
+        "security/ir.model.access.csv",
+        "views/crm_team.xml",
+        "views/sale_order.xml",
+        "wizard/manual_delivery.xml",
+        "wizard/select_order_lines.xml",
+    ],
+    "installable": True,
+    "application": False,
+    "auto_install": False,
+    "pre_init_hook": "pre_init_hook",
+}

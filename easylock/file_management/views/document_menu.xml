@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- 文件管理菜单 - 作为销售模块的子菜单 -->
+        <menuitem id="menu_document_root" 
+                name="文件管理" 
+                parent="sale.sale_menu_root"  
+                sequence="20"/>
+        
+        <!-- 常规文档子菜单 -->
+        <menuitem id="menu_document" 
+                name="常规文档" 
+                parent="menu_document_root" 
+                action="action_document" 
+                sequence="10"/>
+        
+        <!-- 图纸管理子菜单 -->
+        <menuitem id="menu_drawing_management" 
+                name="图纸管理" 
+                parent="menu_document_root" 
+                sequence="20"/>
+        
+        <menuitem id="menu_drawing" 
+                name="图纸" 
+                parent="menu_drawing_management" 
+                action="action_drawing" 
+                sequence="10"/>
+        
+        <!-- 合同管理子菜单 -->
+        <menuitem id="menu_contract_management" 
+                name="合同管理" 
+                parent="menu_document_root" 
+                sequence="30"/>
+        
+        <menuitem id="menu_contract" 
+                name="合同" 
+                parent="menu_contract_management" 
+                action="action_contract" 
+                sequence="10"/>
+        
+        <!-- 配置菜单 -->
+        <menuitem id="menu_document_configuration" 
+                name="配置" 
+                parent="menu_document_root" 
+                sequence="100"/>
+        
+        <menuitem id="menu_document_category" 
+                name="文档类别" 
+                parent="menu_document_configuration" 
+                action="action_document_category" 
+                sequence="10"/>
+        
+        <menuitem id="menu_document_tag" 
+                name="文档标签" 
+                parent="menu_document_configuration" 
+                action="action_document_tag" 
+                sequence="20"/>
+    </data>
+</odoo>

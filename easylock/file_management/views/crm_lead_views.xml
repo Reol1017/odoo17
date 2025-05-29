@@ -1,0 +1,32 @@
+<odoo>
+    <!-- 扩展CRM线索表单视图，添加费用关联 -->
+    <record id="crm_lead_view_form_expense" model="ir.ui.view">
+        <field name="name">crm.lead.form.expense</field>
+        <field name="model">crm.lead</field>
+        <field name="inherit_id" ref="crm.crm_lead_view_form"/>
+        <field name="arch" type="xml">
+            <!-- 添加智能按钮 -->
+            <div name="button_box" position="inside">
+                <button class="oe_stat_button" name="action_view_expenses" type="object" icon="fa-money" invisible="expense_count == 0">
+                    <field string="费用" name="expense_count" widget="statinfo"/>
+                </button>
+            </div>
+            
+            <!-- 在lead选项卡后添加费用选项卡 -->
+            <xpath expr="//form[1]/sheet[1]/notebook[1]//page[@name='lead']" position="after">
+                <page string="费用" name="expenses">
+                    <field name="expense_ids" widget="many2many" options="{'no_create': True}">
+                        <tree>
+                            <field name="date"/>
+                            <field name="name"/>
+                            <field name="employee_id"/>
+                            <field name="total_amount" sum="合计"/>
+                            <field name="currency_id" invisible="1"/>
+                            <field name="state"/>
+                        </tree>
+                    </field>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        
+        <!-- 商机获取与资格审查 -->
+        <record id="stage_lead_qualification" model="crm.stage">
+            <field name="name">商机获取与资格审查</field>
+            <field name="sequence">1</field>
+            <field name="team_id" ref="crm.team_sales_department"/>
+            <field name="fold" eval="False"/>
+        </record>
+        
+        <!-- 报价与谈判 -->
+        <record id="stage_quotation" model="crm.stage">
+            <field name="name">报价与谈判</field>
+            <field name="sequence">2</field>
+            <field name="team_id" ref="crm.team_sales_department"/>
+            <field name="fold" eval="False"/>
+        </record>
+        
+        <!-- 合同管理 -->
+        <record id="stage_contract" model="crm.stage">
+            <field name="name">合同管理</field>
+            <field name="sequence">3</field>
+            <field name="team_id" ref="crm.team_sales_department"/>
+            <field name="fold" eval="False"/>
+        </record>
+        
+        <!-- 项目实施 -->
+        <record id="stage_project" model="crm.stage">
+            <field name="name">项目实施</field>
+            <field name="sequence">4</field>
+            <field name="team_id" ref="crm.team_sales_department"/>
+            <field name="fold" eval="False"/>
+        </record>
+        
+        <!-- 财务处理 -->
+        <record id="stage_finance" model="crm.stage">
+            <field name="name">财务处理</field>
+            <field name="sequence">5</field>
+            <field name="team_id" ref="crm.team_sales_department"/>
+            <field name="fold" eval="False"/>
+        </record>
+        
+        <!-- 售后管理 -->
+        <record id="stage_after_sales" model="crm.stage">
+            <field name="name">售后管理</field>
+            <field name="sequence">6</field>
+            <field name="team_id" ref="crm.team_sales_department"/>
+            <field name="fold" eval="False"/>
+        </record>
+        
+    </data>
+</odoo>

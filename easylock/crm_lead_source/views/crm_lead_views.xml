@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- 继承商机表单视图，添加商机来源字段 -->
+    <record id="view_crm_lead_form_inherit" model="ir.ui.view">
+        <field name="name">crm.lead.form.inherit</field>
+        <field name="model">crm.lead</field>
+        <field name="inherit_id" ref="crm.crm_lead_view_form"/>
+        <field name="arch" type="xml">
+            <!-- 在tag_ids字段后面添加商机来源字段 -->
+            <field name="tag_ids" position="after">
+                <field name="lead_source_id" 
+                       widget="many2one_tags" 
+                       options="{'no_create_edit': True}"
+                       placeholder="选择商机来源"/>
+            </field>
+        </field>
+    </record>
+
+    <!-- 继承商机树形视图，添加商机来源列 -->
+    <record id="view_crm_lead_tree_inherit" model="ir.ui.view">
+        <field name="name">crm.lead.tree.inherit</field>
+        <field name="model">crm.lead</field>
+        <field name="inherit_id" ref="crm.crm_case_tree_view_oppor"/>
+        <field name="arch" type="xml">
+            <field name="tag_ids" position="after">
+                <field name="lead_source_id" optional="show"/>
+            </field>
+        </field>
+    </record>
+
+    <!-- 继承商机搜索视图，添加商机来源筛选 -->
+    <record id="view_crm_lead_search_inherit" model="ir.ui.view">
+        <field name="name">crm.lead.search.inherit</field>
+        <field name="model">crm.lead</field>
+        <field name="inherit_id" ref="crm.view_crm_case_leads_filter"/>
+        <field name="arch" type="xml">
+            <!-- 在tag_ids字段后面添加商机来源搜索字段 -->
+            <field name="tag_ids" position="after">
+                <field name="lead_source_id" string="商机来源" filter_domain="[('lead_source_id', 'ilike', self)]"/>
+            </field>
+            
+            <!-- 在分组选项中添加按商机来源分组 -->
+            <filter name="source" position="after">
+                <filter string="商机来源" name="lead_source" context="{'group_by':'lead_source_id'}"/>
+            </filter>
+        </field>
+    </record>
+
+    <!-- 继承商机看板视图，显示商机来源 -->
+    <record id="view_crm_lead_kanban_inherit" model="ir.ui.view">
+        <field name="name">crm.lead.kanban.inherit</field>
+        <field name="model">crm.lead</field>
+        <field name="inherit_id" ref="crm.crm_case_kanban_view_leads"/>
+        <field name="arch" type="xml">
+            <field name="tag_ids" position="after">
+                <field name="lead_source_id"/>
+            </field>
+            
+            <!-- 在看板卡片中显示商机来源 -->
+            <xpath expr="//div[hasclass('oe_kanban_bottom_left')]" position="inside">
+                <span t-if="record.lead_source_id.value" 
+                      class="badge text-bg-secondary me-1"
+                      title="商机来源">
+                    <i class="fa fa-tag"/> <t t-esc="record.lead_source_id.value"/>
+                </span>
+            </xpath>
+        </field>
+    </record>
+</odoo>

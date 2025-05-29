@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- 商机来源表单视图 -->
+    <record id="view_lead_source_form" model="ir.ui.view">
+        <field name="name">crm.lead.source.form</field>
+        <field name="model">crm.lead.source</field>
+        <field name="arch" type="xml">
+            <form string="商机来源">
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_leads" type="object" class="oe_stat_button" icon="fa-handshake-o">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_value">
+                                    <field name="lead_count"/>
+                                </span>
+                                <span class="o_stat_text">商机</span>
+                            </div>
+                        </button>
+                    </div>
+                    <widget name="web_ribbon" title="已归档" bg_color="text-bg-danger" invisible="not id"/>
+                    
+                    <group>
+                        <group>
+                            <field name="code" placeholder="来源ID（可选）"/>
+                            <field name="name" placeholder="来源途径"/>
+                            <field name="sequence"/>
+                        </group>
+                        <group>
+                        </group>
+                    </group>
+                    
+                    <group>
+                        <field name="description" placeholder="描述此来源的详细信息..."/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- 商机来源列表视图 -->
+    <record id="view_lead_source_tree" model="ir.ui.view">
+        <field name="name">crm.lead.source.tree</field>
+        <field name="model">crm.lead.source</field>
+        <field name="arch" type="xml">
+            <tree string="商机来源" editable="bottom">
+                <field name="sequence" widget="handle"/>
+                <field name="code"/>
+                <field name="name"/>
+                <field name="lead_count"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- 商机来源搜索视图 -->
+    <record id="view_lead_source_search" model="ir.ui.view">
+        <field name="name">crm.lead.source.search</field>
+        <field name="model">crm.lead.source</field>
+        <field name="arch" type="xml">
+            <search string="搜索商机来源">
+                <field name="name" string="来源途径" filter_domain="['|', ('name', 'ilike', self), ('code', 'ilike', self)]"/>
+                <field name="code"/>
+                <separator/>
+                <group expand="0" string="分组">
+                    <filter string="序号" name="group_by_sequence" context="{'group_by':'sequence'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- 商机来源看板视图 -->
+    <record id="view_lead_source_kanban" model="ir.ui.view">
+        <field name="name">crm.lead.source.kanban</field>
+        <field name="model">crm.lead.source</field>
+        <field name="arch" type="xml">
+            <kanban class="o_kanban_mobile">
+                <field name="name"/>
+                <field name="code"/>
+                <field name="lead_count"/>
+                <templates>
+                    <t t-name="kanban-box">
+                        <div class="oe_kanban_card oe_kanban_global_click">
+                            <div class="o_kanban_card_content">
+                                <div class="o_kanban_primary_left">
+                                    <div class="o_primary">
+                                        <strong><field name="name"/></strong>
+                                    </div>
+                                    <div class="o_secondary" t-if="record.code.value">
+                                        编码: <field name="code"/>
+                                    </div>
+                                </div>
+                                <div class="o_kanban_primary_right">
+                                    <div class="badge badge-pill">
+                                        <field name="lead_count"/> 商机
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- 商机来源动作 -->
+    <record id="action_lead_source" model="ir.actions.act_window">
+        <field name="name">商机来源</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">crm.lead.source</field>
+        <field name="view_mode">tree,form,kanban</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                创建第一个商机来源
+            </p>
+            <p>
+                商机来源用于标识和分类不同渠道获得的销售机会，如：
+                <br/>• 网站询盘
+                <br/>• 电话营销
+                <br/>• 展会推广
+                <br/>• 客户推荐
+                <br/>• 广告投放
+            </p>
+        </field>
+    </record>
+
+    <!-- 在CRM配置菜单下添加商机来源 -->
+    <menuitem id="menu_lead_source"
+              name="商机来源"
+              parent="crm.crm_menu_config"
+              action="action_lead_source"
+              sequence="10"/>
+</odoo>

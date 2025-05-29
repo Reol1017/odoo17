@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        
+        <!-- 继承商机表单视图 -->
+        <record id="crm_lead_view_form_inherit" model="ir.ui.view">
+            <field name="name">crm.lead.form.inherit</field>
+            <field name="model">crm.lead</field>
+            <field name="inherit_id" ref="crm.crm_lead_view_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='partner_name']" position="after">
+                    <field name="organization_contact" placeholder="组织/联系人"/>
+                    <field name="project_name" placeholder="项目名称"/>
+                </xpath>
+                
+                <xpath expr="//field[@name='expected_revenue']" position="replace">
+                    <field name="expected_revenue_custom" placeholder="预期收入"/>
+                </xpath>
+            </field>
+        </record>
+        
+        <!-- 继承商机看板视图 -->
+        <record id="crm_lead_view_kanban_inherit" model="ir.ui.view">
+            <field name="name">crm.lead.kanban.inherit</field>
+            <field name="model">crm.lead</field>
+            <field name="inherit_id" ref="crm.crm_case_kanban_view_leads"/>
+            <field name="arch" type="xml">
+                <xpath expr="//div[hasclass('oe_kanban_content')]" position="inside">
+                    <div t-if="record.organization_contact.raw_value">
+                        <strong>组织联系人：</strong>
+                        <field name="organization_contact"/>
+                    </div>
+                    <div t-if="record.project_name.raw_value">
+                        <strong>项目：</strong>
+                        <field name="project_name"/>
+                    </div>
+                </xpath>
+            </field>
+        </record>
+        
+    </data>
+</odoo>

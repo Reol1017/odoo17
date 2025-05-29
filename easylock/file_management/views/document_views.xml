@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- 文档类别视图 -->
+    <record id="view_document_category_form" model="ir.ui.view">
+        <field name="name">document.category.form</field>
+        <field name="model">document.category</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                        <field name="code"/>
+                        <field name="is_drawing"/>
+                        <field name="is_contract"/>
+                        <field name="description"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_document_category_tree" model="ir.ui.view">
+        <field name="name">document.category.tree</field>
+        <field name="model">document.category</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name"/>
+                <field name="code"/>
+                <field name="is_drawing"/>
+                <field name="is_contract"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- 文档标签视图 -->
+    <record id="view_document_tag_form" model="ir.ui.view">
+        <field name="name">document.tag.form</field>
+        <field name="model">document.tag</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                        <field name="color" widget="color_picker"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+   <record id="view_document_tag_tree" model="ir.ui.view">
+        <field name="name">document.tag.tree</field>
+        <field name="model">document.tag</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- 文档表单视图 -->
+    <record id="view_document_form" model="ir.ui.view">
+        <field name="name">document.document.form</field>
+        <field name="model">document.document</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_submit" string="提交" type="object" invisible="state != 'draft'" class="oe_highlight"/>
+                    <button name="action_approve" string="批准" type="object" invisible="state != 'submitted'" class="oe_highlight" groups="file_management.group_document_manager"/>
+                    <button name="action_reject" string="拒绝" type="object" invisible="state != 'submitted'" groups="file_management.group_document_manager"/>
+                    <button name="action_archive" string="归档" type="object" invisible="state not in ('approved', 'rejected')"/>
+                    <button name="action_draft" string="设为草稿" type="object" invisible="state == 'draft'"/>
+                    <button name="action_create_new_version" string="创建新版本" type="object" class="oe_highlight"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,submitted,approved"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <!-- 智能按钮可以添加在这里 -->
+                    </div>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="文档名称"/>
+                        </h1>
+                        <h3>
+                            <field name="document_number" placeholder="文档编号"/>
+                            <span class="ml-2">版本: <field name="version" class="oe_inline"/></span>
+                        </h3>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="category_id"/>
+                            <field name="file_type"/>
+                            <field name="file" filename="filename"/>
+                            <field name="filename" invisible="1"/>
+                            <field name="tag_ids" widget="many2many_tags" options="{'color_field': 'color'}"/>
+                        </group>
+                        <group>
+                            <field name="user_id"/>
+                            <field name="create_date"/>
+                            <field name="reviewer_id" invisible="state not in ('approved', 'rejected')"/>
+                            <field name="approval_date" invisible="state != 'approved'"/>
+                            <field name="previous_version_id" readonly="1" invisible="not previous_version_id"/>
+                            <field name="next_version_id" readonly="1" invisible="not next_version_id"/>
+                            <field name="is_drawing" invisible="1"/>
+                            <field name="is_contract" invisible="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="描述">
+                            <field name="description" placeholder="输入文档描述..."/>
+                        </page>
+                        <page string="关联信息">
+                            <group>
+                                <field name="partner_id"/>
+                                <field name="product_id"/>
+                                <field name="project_id"/>
+                                <field name="task_ids" widget="many2many_tags"/>
+                                <field name="sale_order_id"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <!-- 文档树形视图 -->
+    <record id="view_document_tree" model="ir.ui.view">
+        <field name="name">document.document.tree</field>
+        <field name="model">document.document</field>
+        <field name="arch" type="xml">
+            <tree decoration-success="state == 'approved'" decoration-warning="state == 'submitted'" decoration-danger="state == 'rejected'" decoration-muted="state == 'archived'">
+                <field name="document_number"/>
+                <field name="name"/>
+                <field name="version"/>
+                <field name="category_id"/>
+                <field name="file_type"/>
+                <field name="user_id"/>
+                <field name="create_date"/>
+                <field name="state"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- 文档搜索视图 -->
+    <record id="view_document_search" model="ir.ui.view">
+        <field name="name">document.document.search</field>
+        <field name="model">document.document</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="document_number"/>
+                <field name="description"/>
+                <field name="user_id"/>
+                <field name="category_id"/>
+                <filter string="我的文档" name="my_documents" domain="[('user_id', '=', uid)]"/>
+                <filter string="图纸" name="drawings" domain="[('is_drawing', '=', True)]"/>
+                <filter string="合同" name="contracts" domain="[('is_contract', '=', True)]"/>
+                <filter string="常规文档" name="regular_docs" domain="[('is_drawing', '=', False), ('is_contract', '=', False)]"/>
+                <filter string="草稿" name="draft" domain="[('state', '=', 'draft')]"/>
+                <filter string="已提交" name="submitted" domain="[('state', '=', 'submitted')]"/>
+                <filter string="已批准" name="approved" domain="[('state', '=', 'approved')]"/>
+                <filter string="已拒绝" name="rejected" domain="[('state', '=', 'rejected')]"/>
+                <filter string="已归档" name="archived" domain="[('state', '=', 'archived')]"/>
+                <group expand="0" string="分组依据">
+                    <filter string="类别" name="groupby_category" context="{'group_by': 'category_id'}"/>
+                    <filter string="负责人" name="groupby_user" context="{'group_by': 'user_id'}"/>
+                    <filter string="状态" name="groupby_state" context="{'group_by': 'state'}"/>
+                    <filter string="创建日期" name="groupby_create_date" context="{'group_by': 'create_date:month'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- 文档操作窗口 -->
+    <record id="action_document" model="ir.actions.act_window">
+        <field name="name">常规文档</field>
+        <field name="res_model">document.document</field>
+        <field name="view_mode">tree,form</field>
+        <field name="domain">[('is_drawing', '=', False), ('is_contract', '=', False)]</field>
+        <field name="context">{'search_default_my_documents': 1, 'search_default_regular_docs': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                创建您的第一个文档
+            </p>
+            <p>
+                创建并管理文档，可以是技术说明书、报告、手册等。
+            </p>
+        </field>
+    </record>
+
+    <!-- 文档类别操作窗口 -->
+    <record id="action_document_category" model="ir.actions.act_window">
+        <field name="name">文档类别</field>
+        <field name="res_model">document.category</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <!-- 文档标签操作窗口 -->
+    <record id="action_document_tag" model="ir.actions.act_window">
+        <field name="name">文档标签</field>
+        <field name="res_model">document.tag</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+</odoo>

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+   <record id='manual_delivery_wizard_form' model='ir.ui.view'>
+        <field name="name">manual.delivery.wizard.form</field>
+        <field name="model">manual.delivery</field>
+        <field name='arch' type='xml'>
+            <form string="创建出库单" name="manual_procurment_form">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="commercial_partner_id" invisible="1" force_save="1"/>
+                            <field name="partner_id" string="客户地址"/>
+                            <field name="date_planned" string="计划日期"/>
+                        </group>
+                        <group>
+                            <field name="carrier_id" string="运输承运商" invisible="1"/>
+                            <field name="route_id" groups="stock.group_adv_location" />
+                           
+                        </group>
+                    </group>
+                    <field name='line_ids'>
+                        <tree editable="bottom" >
+                            <field name="sequence" widget="handle" string="序列"/>
+                            <field name="order_line_id" string="订单行编号"/>
+                            <field name="order_partner_id" string="订单号"/>
+                            <field name="name" string="产品名称"/>
+                            <field name="qty_ordered" string="订单总数量" />
+                            <field name="qty_procured" string="已交付数量" />
+                            <field name="quantity" string="本次交付数量" />
+                            <field name="total_price" string="产品总价$"/>
+                          
+                            
+                        </tree>
+                    </field>
+                    <group>
+                        <field name="total_shipment_price" string="本次出货产品总价$:" readonly="1"/>
+                    </group>
+                </sheet>
+                <footer>
+                    <button type="object" name="confirm" string="发货" class="btn-primary"/>
+                  
+                    <button string="取消" class="btn-default" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+
+    <record id="action_wizard_manual_delivery" model="ir.actions.act_window">
+        <field name="name">创建出库单</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">manual.delivery</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="binding_model_id" ref="sale.model_sale_order" />
+    </record>
+    <record id="action_wizard_manual_delivery_line" model="ir.actions.act_window">
+        <field name="name">创建出库单</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">manual.delivery</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="binding_model_id" ref="sale.model_sale_order_line" />
+    </record>
+</odoo>

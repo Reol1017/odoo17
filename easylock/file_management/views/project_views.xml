@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- 扩展项目表单视图 -->
+    <record id="view_project_document_form" model="ir.ui.view">
+        <field name="name">project.project.document.form</field>
+        <field name="model">project.project</field>
+        <field name="inherit_id" ref="project.edit_project"/>
+        <field name="arch" type="xml">
+            <div name="button_box" position="inside">
+                <button class="oe_stat_button" name="action_view_documents" type="object" icon="fa-file-text-o">
+                    <field string="文档" name="document_count" widget="statinfo"/>
+                </button>
+                <button class="oe_stat_button" name="action_view_drawings" type="object" icon="fa-pencil-ruler">
+                    <field string="图纸" name="drawing_count" widget="statinfo"/>
+                </button>
+                <button class="oe_stat_button" name="action_view_contracts" type="object" icon="fa-file-contract">
+                    <field string="合同" name="contract_count" widget="statinfo"/>
+                </button>
+            </div>
+        </field>
+    </record>
+
+    <!-- 扩展任务表单视图 -->
+    <record id="view_task_document_form" model="ir.ui.view">
+        <field name="name">project.task.document.form</field>
+        <field name="model">project.task</field>
+        <field name="inherit_id" ref="project.view_task_form2"/>
+        <field name="arch" type="xml">
+            <div name="button_box" position="inside">
+                <button class="oe_stat_button" name="action_view_documents" type="object" icon="fa-file-text-o">
+                    <field string="文档" name="document_count" widget="statinfo"/>
+                </button>
+            </div>
+            <notebook position="inside">
+                <page string="相关文档" name="documents">
+                    <field name="document_ids"/>
+                </page>
+            </notebook>
+        </field>
+    </record>
+</odoo>
