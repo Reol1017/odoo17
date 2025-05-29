@@ -6,37 +6,51 @@
         <field name="model">hr.expense</field>
         <field name="inherit_id" ref="hr_expense.hr_expense_view_form"/>
         <field name="arch" type="xml">
-            <xpath expr="//field[@name='product_id']" position="before">
-                <field name="ocr_recognized" invisible="1"/>
-                <field name="ticket_type" invisible="1"/>
+            <xpath expr="//sheet" position="before">
+                <div class="alert alert-info" role="alert" invisible="not ocr_recognized">
+                    <strong>OCR已识别</strong> - 此记录包含OCR识别的数据
+                </div>
             </xpath>
             
-            <!-- 在产品字段下方添加发票信息组 -->
-            <xpath expr="//field[@name='product_id']/../../.." position="after">
-                <group string="发票信息" invisible="not ocr_recognized">
-                    <group string="基本信息">
-                        <field name="invoice_number" readonly="True"/>
-                        <field name="invoice_code" readonly="True"/>
-                        <field name="invoice_date" readonly="True"/>
-                        <field name="drawer" readonly="True"/>
+            <xpath expr="//field[@name='product_id']" position="before">
+                <field name="ocr_recognized" invisible="0"/>
+            </xpath>
+            
+            <!-- 在产品字段后添加备注字段 -->
+            <xpath expr="//field[@name='description']" position="replace">
+                <field name="remarks" placeholder="备注信息..." invisible="not ocr_recognized"/>
+                <field name="description" placeholder="描述..." invisible="ocr_recognized"/>
+            </xpath>
+            
+            <!-- 添加发票信息区域 -->
+            <xpath expr="//field[@name='product_id']/.." position="after">
+                <div invisible="not ocr_recognized">
+                    <group string="发票信息">
+                        <group>
+                            <field name="invoice_number" string="发票号码"/>
+                            <field name="invoice_date" string="开票日期"/>
+                            <field name="note_drawer" string="开票人"/>
+                            <field name="amount_in_words" string="价税合计(大写)"/>
+                        </group>
+                        <group>
+                            <field name="total_amount" string="金额合计"/>
+                            <field name="total_tax" string="税额合计"/>
+                            <field name="tax_rate" string="税率"/>
+                            <field name="amount_in_figures" string="价税合计(小写)"/>
+                        </group>
                     </group>
-                    <group string="金额信息">
-                        <field name="total_amount" string="含税金额" readonly="True"/>
-                        <field name="tax_rate" readonly="True"/>
-                        <field name="tax_amount" readonly="True"/>
-                        <field name="amount_in_words" readonly="True"/>
+                    
+                    <group>
+                        <group string="购买方信息">
+                            <field name="purchaser_name" string="购买方名称"/>
+                            <field name="purchaser_register_num" string="购买方税号"/>
+                        </group>
+                        <group string="销售方信息">
+                            <field name="vendor_name" string="销售方名称"/>
+                            <field name="seller_register_num" string="销售方税号"/>
+                        </group>
                     </group>
-                </group>
-                <group class="row"> 
-                    <group class="col-6" string="销售方信息" invisible="not ocr_recognized">
-                        <field name="vendor_name" readonly="True"/>
-                        <field name="vendor_tax_id" readonly="True"/>
-                    </group>
-                    <group class="col-6" string="购买方信息" invisible="not ocr_recognized">
-                        <field name="purchaser_name" readonly="True"/>
-                        <field name="purchaser_tax_id" readonly="True"/>
-                    </group>
-                </group>
+                </div>
             </xpath>
             
             <xpath expr="//button[@name='action_view_sheet']" position="before">
@@ -67,13 +81,12 @@
                 <attribute name="decoration-info">ocr_recognized</attribute>
             </xpath>
             <xpath expr="//field[@name='date']" position="after">
-                <field name="ocr_recognized" invisible="1"/>
-                <field name="amount_without_tax" optional="hide"/>
-                <field name="tax_amount" optional="hide"/>
-                <field name="invoice_number" optional="show"/>
+                <field name="ocr_recognized" invisible="0"/>
                 <field name="vendor_name" optional="show"/>
-                <field name="purchaser_name" optional="hide"/>
-                <field name="drawer" optional="hide"/>
+                <field name="invoice_number" optional="show"/>
+                <field name="total_amount" sum="金额合计" optional="show"/>
+                <field name="total_tax" sum="税额合计" optional="show"/>
+                <field name="amount_in_figures" sum="含税价格" optional="show"/>
             </xpath>
         </field>
     </record>
@@ -86,28 +99,5 @@
         <field name="target">new</field>
         <field name="binding_model_id" ref="hr_expense.model_hr_expense"/>
         <field name="binding_view_types">list,form</field>
-    </record>
-    
-    <!-- 添加OCR搜索视图 -->
-    <record id="hr_expense_view_search_ocr" model="ir.ui.view">
-        <field name="name">hr.expense.search.ocr</field>
-        <field name="model">hr.expense</field>
-        <field name="inherit_id" ref="hr_expense.hr_expense_view_search"/>
-        <field name="arch" type="xml">
-            <xpath expr="//field[@name='name']" position="after">
-                <field name="invoice_number"/>
-                <field name="vendor_name"/>
-                <field name="vendor_tax_id"/>
-                <field name="purchaser_name"/>
-                <field name="drawer"/>
-                <filter string="OCR识别" name="ocr_recognized" domain="[('ocr_recognized', '=', True)]"/>
-            </xpath>
-            <xpath expr="//group" position="inside">
-                <filter string="销售方" name="vendor_name" context="{'group_by': 'vendor_name'}"/>
-                <filter string="购买方" name="purchaser_name" context="{'group_by': 'purchaser_name'}"/>
-                <filter string="开票人" name="drawer" context="{'group_by': 'drawer'}"/>
-                <filter string="发票日期" name="invoice_date" context="{'group_by': 'invoice_date'}"/>
-            </xpath>
-        </field>
     </record>
 </odoo> 

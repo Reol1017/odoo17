@@ -76,34 +76,31 @@ class OcrUploadWizard(models.TransientModel):
         invoice_num = self._get_first_value(result_data.get('InvoiceNum', []))
         invoice_code = self._get_first_value(result_data.get('InvoiceCode', []))
         invoice_date_str = self._get_first_value(result_data.get('InvoiceDate', []))
-        invoice_date = self._parse_date(invoice_date_str) if invoice_date_str else False
+        invoice_date = self._parse_date(invoice_date_str)
         
-        # 提取金额信息
+        # 提取金额信息 - 使用TotalAmount替代AmountInFiguers
         total_amount_str = self._get_first_value(result_data.get('TotalAmount', []))
         total_amount = float(total_amount_str) if total_amount_str else 0.0
         
+        # 提取含税价格
         amount_in_figures_str = self._get_first_value(result_data.get('AmountInFiguers', []))
         amount_in_figures = float(amount_in_figures_str) if amount_in_figures_str else 0.0
         
+        # 提取税额合计
         total_tax_str = self._get_first_value(result_data.get('TotalTax', []))
         total_tax = float(total_tax_str) if total_tax_str else 0.0
         
-        # 处理税率
-        tax_rates = []
-        if 'CommodityTaxRate' in result_data:
-            for tax_rate in result_data['CommodityTaxRate']:
-                if 'word' in tax_rate:
-                    tax_rates.append(tax_rate['word'])
-        
-        tax_rate = ''
-        if tax_rates:
-            # 检查是否所有税率都相同
-            if all(rate == tax_rates[0] for rate in tax_rates):
-                tax_rate = tax_rates[0]
-            else:
-                tax_rate = '混合税率'
-        
+        # 提取价税合计大写
         amount_in_words = self._get_first_value(result_data.get('AmountInWords', []))
+        
+        # 提取开票人
+        note_drawer = self._get_first_value(result_data.get('NoteDrawer', []))
+        
+        # 提取税率
+        tax_rate = self._process_tax_rates(result_data.get('CommodityTaxRate', []))
+        
+        # 提取备注
+        remarks = self._get_first_value(result_data.get('Remarks', []))
         
         # 提取销售方和购买方信息
         vendor_name = self._get_first_value(result_data.get('SellerName', []))
@@ -111,14 +108,8 @@ class OcrUploadWizard(models.TransientModel):
         purchaser_name = self._get_first_value(result_data.get('PurchaserName', []))
         purchaser_tax_id = self._get_first_value(result_data.get('PurchaserRegisterNum', []))
         
-        # 提取商品信息
+        # 商品名称
         commodity_name = self._get_first_value(result_data.get('CommodityName', []))
-        
-        # 提取备注信息
-        remarks = self._get_first_value(result_data.get('Remarks', []))
-        
-        # 提取开票人信息
-        drawer = self._get_first_value(result_data.get('NoteDrawer', []))
         
         # 创建增值税发票记录（用于参考）
         vat_invoice = self.env['vat.invoice'].create({
@@ -127,45 +118,45 @@ class OcrUploadWizard(models.TransientModel):
             'invoice_code': invoice_code,
             'invoice_date': invoice_date,
             'amount': total_amount,
-            'amount_without_tax': amount_in_figures,
-            'tax_amount': total_tax,
-            'tax_rate': tax_rate,
-            'amount_in_words': amount_in_words,
             'vendor_name': vendor_name,
             'vendor_tax_id': vendor_tax_id,
             'purchaser_name': purchaser_name,
             'purchaser_tax_id': purchaser_tax_id,
             'commodity_name': commodity_name,
-            'drawer': drawer,
+            'tax_rate': float(tax_rate.replace('%', '')) if tax_rate and '%' in tax_rate else 0.0,
+            'tax_amount': total_tax,
+            'amount_in_words': amount_in_words,
+            'drawer': note_drawer,
             'remarks': remarks,
             'ocr_raw_data': json.dumps(raw_data, ensure_ascii=False, indent=2)
         })
         
         # 查找或创建产品
-        product = self._find_or_create_expense_product(commodity_name or '餐饮服务')
+        product = self._find_or_create_expense_product(commodity_name or vendor_name or '其他费用')
         
         # 准备OCR数据
-        description = remarks if remarks else commodity_name
+        description = remarks if remarks else ""
         
         ocr_data = {
-            'name': commodity_name or '餐饮服务',
+            'name': commodity_name or f"{vendor_name} 的费用",
             'date': invoice_date or fields.Date.today(),
-            'amount': total_amount,
+            'total_amount': total_amount,
             'product_id': product.id,
             'description': description,
             'invoice_code': invoice_code,
             'invoice_number': invoice_num,
-            'invoice_date': invoice_date,
-            'drawer': drawer,
-            'tax_amount': total_tax,
-            'amount_without_tax': amount_in_figures,
-            'tax_rate': tax_rate,
-            'amount_in_words': amount_in_words,
             'vendor_name': vendor_name,
-            'vendor_tax_id': vendor_tax_id,
+            'invoice_date': invoice_date,
+            'note_drawer': note_drawer,
+            'total_tax': total_tax,
+            'amount_in_figures': amount_in_figures,
+            'amount_in_words': amount_in_words,
+            'tax_rate': tax_rate,
+            'remarks': remarks,
             'purchaser_name': purchaser_name,
-            'purchaser_tax_id': purchaser_tax_id,
-            'ticket_type': 'vat_invoice',
+            'purchaser_register_num': purchaser_tax_id,
+            'seller_register_num': vendor_tax_id,
+            'ocr_recognized': True,  # 确保设置OCR识别标志
         }
         
         # 准备附件数据
@@ -199,7 +190,7 @@ class OcrUploadWizard(models.TransientModel):
         ticket_number = self._get_first_value(result_data.get('InvoiceNum', []))
         train_number = self._get_first_value(result_data.get('TrainNum', []))
         departure_date_str = self._get_first_value(result_data.get('Date', []))
-        departure_date = self._parse_date(departure_date_str) if departure_date_str else False
+        departure_date = self._parse_date(departure_date_str)
         
         # 提取金额信息
         amount_str = self._get_first_value(result_data.get('Amount', []))
@@ -209,19 +200,48 @@ class OcrUploadWizard(models.TransientModel):
         origin = self._get_first_value(result_data.get('Origin', []))
         destination = self._get_first_value(result_data.get('Destination', []))
         
+        # 创建火车票记录（用于参考）
+        train_ticket = self.env['train.ticket'].create({
+            'name': f"火车票 {train_number or ''}",
+            'ticket_number': ticket_number,
+            'train_number': train_number,
+            'date': departure_date,
+            'amount': amount,
+            'origin': origin,
+            'destination': destination,
+            'ocr_raw_data': json.dumps(raw_data, ensure_ascii=False, indent=2)
+        })
+        
         # 查找或创建产品
         product = self._find_or_create_expense_product('火车票')
         
         # 准备OCR数据
-        description = f"火车票 {origin} 到 {destination}"
+        reference_info = f"车次: {train_number}" if train_number else f"{origin} - {destination}"
+        description = f"车次: {train_number}\n出发站: {origin}\n到达站: {destination}\n车票号: {ticket_number}\n参考: {reference_info}"
         
+        # 为火车票设置所有必要的字段，避免界面上出现空白
         ocr_data = {
-            'name': description,
+            'name': f"火车票 {origin} 到 {destination}",
             'date': departure_date or fields.Date.today(),
-            'amount': amount,
+            'total_amount': amount,  # 使用total_amount替代amount
+            'amount_in_figures': amount,  # 设置含税价格
             'product_id': product.id,
             'description': description,
-            'ticket_type': 'train_ticket',
+            'remarks': description,  # 添加备注
+            'ocr_recognized': True,  # 确保设置OCR识别标志
+            
+            # 设置其他必要字段，即使为空
+            'invoice_number': ticket_number,
+            'invoice_code': '',
+            'invoice_date': departure_date,
+            'note_drawer': '',
+            'total_tax': 0.0,
+            'amount_in_words': '',
+            'tax_rate': '',
+            'purchaser_name': '',
+            'purchaser_register_num': '',
+            'vendor_name': f"火车票 {train_number}",
+            'seller_register_num': '',
         }
         
         # 准备附件数据
@@ -273,6 +293,31 @@ class OcrUploadWizard(models.TransientModel):
             })
         
         return product
+    
+    def _process_tax_rates(self, tax_rates):
+        """处理税率信息
+        如果所有税率都相同，返回该税率
+        如果有不同的税率，返回"混合税率"
+        """
+        if not tax_rates or not isinstance(tax_rates, list):
+            return ""
+            
+        # 提取所有税率值
+        rates = []
+        for rate in tax_rates:
+            if isinstance(rate, dict) and 'word' in rate:
+                rates.append(rate['word'])
+                
+        # 如果没有税率，返回空字符串
+        if not rates:
+            return ""
+            
+        # 检查是否所有税率都相同
+        unique_rates = set(rates)
+        if len(unique_rates) == 1:
+            return rates[0]  # 返回唯一的税率
+        else:
+            return "混合税率"  # 返回混合税率
     
     def _get_first_value(self, data_list):
         """从列表中获取第一个元素的值"""

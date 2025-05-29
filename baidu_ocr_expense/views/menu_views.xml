@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<odoo>
-    <!-- 票据菜单根目录 -->
-    <menuitem id="ticket_menu_root" 
-              name="票据管理" 
-              parent="hr_expense.menu_hr_expense_root"
-              sequence="50"/>
-</odoo> 
