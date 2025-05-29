@@ -37,7 +37,6 @@
     'data': [
         'security/ir.model.access.csv',
         'views/baidu_ocr_config_views.xml',
-        'views/ocr_menu.xml',
         'views/hr_expense_views.xml',
         'views/separate_models_views.xml',
         'wizard/ocr_upload_wizard_views.xml',

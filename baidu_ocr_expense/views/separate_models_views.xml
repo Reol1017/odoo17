@@ -42,7 +42,7 @@
                             <field name="purchaser_bank"/>
                         </group>
                     </group>
-                    
+<!--                     
                     <group string="商品信息">
                         <field name="commodity_name"/>
                         <field name="commodity_type"/>
@@ -50,7 +50,7 @@
                         <field name="commodity_quantity"/>
                         <field name="commodity_price"/>
                         <field name="commodity_amount"/>
-                    </group>
+                    </group> -->
                     
                     <group>
                         <group string="其他信息">

@@ -8,6 +8,28 @@ from odoo.exceptions import UserError
 
 _logger = logging.getLogger(__name__)
 
+# 票据类型映射表
+TICKET_TYPE_MAPPING = {
+    'vat_invoice': '增值税发票',
+    'taxi_receipt': '出租车票',
+    'train_ticket': '火车票',
+    'quota_invoice': '定额发票',
+    'air_ticket': '飞机行程单',
+    'roll_normal_invoice': '卷票',
+    'printed_invoice': '机打发票',
+    'printed_elec_invoice': '机打电子发票',
+    'bus_ticket': '汽车票',
+    'toll_invoice': '过路过桥费发票',
+    'ferry_ticket': '船票',
+    'motor_vehicle_invoice': '机动车销售发票',
+    'used_vehicle_invoice': '二手车发票',
+    'taxi_online_ticket': '网约车行程单',
+    'limit_invoice': '限额发票',
+    'shopping_receipt': '购物小票',
+    'pos_invoice': 'POS小票',
+    'others': '其他',
+}
+
 class OcrUploadWizard(models.TransientModel):
     _name = 'ocr.upload.wizard'
     _description = 'OCR上传向导'
@@ -81,7 +103,7 @@ class OcrUploadWizard(models.TransientModel):
         
         # 同时创建费用记录
         expense_data = self._prepare_vat_invoice_data(result_data)
-        product = self._find_or_create_expense_product(expense_data.get('product_name', '其他费用'))
+        product = self._find_or_create_expense_product('增值税发票')
         expense_data['product_id'] = product.id
         expense = self.env['hr.expense'].create(expense_data)
         
@@ -110,7 +132,7 @@ class OcrUploadWizard(models.TransientModel):
         
         # 同时创建费用记录
         expense_data = self._prepare_train_ticket_data(result_data)
-        product = self._find_or_create_expense_product(expense_data.get('product_name', '火车票'))
+        product = self._find_or_create_expense_product('火车票')
         expense_data['product_id'] = product.id
         expense = self.env['hr.expense'].create(expense_data)
         
@@ -136,7 +158,9 @@ class OcrUploadWizard(models.TransientModel):
         """创建并显示通用费用记录"""
         # 创建费用记录
         expense_data = self._prepare_other_ticket_data(result_data, ticket_type)
-        product = self._find_or_create_expense_product(expense_data.get('product_name', ticket_type))
+        # 获取票据类型的中文名称
+        ticket_type_name = TICKET_TYPE_MAPPING.get(ticket_type, '其他票据')
+        product = self._find_or_create_expense_product(ticket_type_name)
         expense_data['product_id'] = product.id
         expense = self.env['hr.expense'].create(expense_data)
         
@@ -171,7 +195,8 @@ class OcrUploadWizard(models.TransientModel):
             expense_data = self._prepare_other_ticket_data(result_data, ticket_type)
         
         # 查找或创建产品
-        product = self._find_or_create_expense_product(expense_data.get('product_name', '其他费用'))
+        ticket_type_name = TICKET_TYPE_MAPPING.get(ticket_type, '其他票据')
+        product = self._find_or_create_expense_product(ticket_type_name)
         expense_data['product_id'] = product.id
         
         # 创建费用记录
@@ -197,23 +222,33 @@ class OcrUploadWizard(models.TransientModel):
         invoice_date_str = self._get_first_value(result_data.get('InvoiceDate', []))
         commodity_name = self._get_first_value(result_data.get('CommodityName', []))
         
+        # 提取总金额
+        total_amount_str = self._get_first_value(result_data.get('TotalAmount', []))
+        
         try:
             amount = float(amount_str.replace(',', '')) if amount_str else 0.0
+            total_amount = float(total_amount_str.replace(',', '')) if total_amount_str else amount
         except (ValueError, TypeError):
             amount = 0.0
+            total_amount = 0.0
+        
+        # 解析日期
+        parsed_date = self._parse_date(invoice_date_str) or fields.Date.today()
         
         return {
             'name': commodity_name or vendor_name or f"发票 {invoice_num}",
-            'unit_amount': amount,
-            'date': self._parse_date(invoice_date_str) or fields.Date.today(),
+            'total_amount': total_amount,  # 公司币种的总金额
+            'total_amount_currency': total_amount,  # 原始币种的总金额
+            'price_unit': total_amount,  # 单价
+            'quantity': 1.0,  # 数量
+            'date': parsed_date,
             'description': f"发票号码: {invoice_num}",
             'ocr_recognized': True,
             'ocr_invoice_type': 'vat_invoice',
             'invoice_number': invoice_num,
             'vendor_name': vendor_name,
-            'invoice_date': invoice_date_str,
+            'invoice_date': parsed_date,  # 使用解析后的日期
             'amount_in_figures': amount_str,
-            'total_amount': self._get_first_value(result_data.get('TotalAmount', [])),
             'total_tax': self._get_first_value(result_data.get('TotalTax', [])),
             'tax_rate': self._process_tax_rates(result_data.get('CommodityTaxRate', [])),
             'amount_in_words': self._get_first_value(result_data.get('AmountInWords', [])),
@@ -221,7 +256,6 @@ class OcrUploadWizard(models.TransientModel):
             'purchaser_name': self._get_first_value(result_data.get('PurchaserName', [])),
             'purchaser_register_num': self._get_first_value(result_data.get('PurchaserRegisterNum', [])),
             'seller_register_num': self._get_first_value(result_data.get('SellerRegisterNum', [])),
-            'product_name': commodity_name or '其他费用',
         }
     
     def _prepare_train_ticket_data(self, result_data):
@@ -237,10 +271,16 @@ class OcrUploadWizard(models.TransientModel):
         except (ValueError, TypeError):
             amount = 0.0
         
+        # 解析日期
+        parsed_date = self._parse_date(date_str) or fields.Date.today()
+        
         return {
             'name': f"火车票 {origin}-{destination}",
-            'unit_amount': amount,  # hr.expense中使用unit_amount
-            'date': self._parse_date(date_str) or fields.Date.today(),
+            'total_amount': amount,  # 公司币种的总金额
+            'total_amount_currency': amount,  # 原始币种的总金额
+            'price_unit': amount,  # 单价
+            'quantity': 1.0,  # 数量
+            'date': parsed_date,
             'description': f"车次: {train_number}, {origin} → {destination}",
             'ocr_recognized': True,
             'ocr_invoice_type': 'train_ticket',
@@ -251,8 +291,7 @@ class OcrUploadWizard(models.TransientModel):
             'seat_class': self._get_first_value(result_data.get('PassengerClass', [])),
             'passenger_name': self._get_first_value(result_data.get('PassengerName', [])),
             'passenger_id': self._get_first_value(result_data.get('PassengerIdNum', [])),
-            'total_amount': amount,  # 我们自定义的字段
-            'product_name': '火车票',
+            'invoice_date': parsed_date,  # 使用解析后的日期
         }
     
     def _prepare_other_ticket_data(self, result_data, ticket_type):
@@ -262,20 +301,33 @@ class OcrUploadWizard(models.TransientModel):
                      self._get_first_value(result_data.get('Amount', [])) or 
                      self._get_first_value(result_data.get('TicketPrice', [])))
         
+        # 提取日期
+        date_str = (self._get_first_value(result_data.get('Date', [])) or 
+                   self._get_first_value(result_data.get('InvoiceDate', [])) or 
+                   self._get_first_value(result_data.get('Time', [])))
+        
         try:
             amount = float(amount_str.replace(',', '')) if amount_str else 0.0
         except (ValueError, TypeError):
             amount = 0.0
         
+        # 获取票据类型的中文名称
+        ticket_type_name = TICKET_TYPE_MAPPING.get(ticket_type, '其他票据')
+        
+        # 解析日期
+        parsed_date = self._parse_date(date_str) or fields.Date.today()
+        
         return {
-            'name': f"{ticket_type} 费用",
-            'unit_amount': amount,  # hr.expense中使用unit_amount
-            'date': fields.Date.today(),
-            'description': f"OCR识别的 {ticket_type}",
+            'name': f"{ticket_type_name}",
+            'total_amount': amount,  # 公司币种的总金额
+            'total_amount_currency': amount,  # 原始币种的总金额
+            'price_unit': amount,  # 单价
+            'quantity': 1.0,  # 数量
+            'date': parsed_date,
+            'description': f"OCR识别的{ticket_type_name}",
             'ocr_recognized': True,
             'ocr_invoice_type': ticket_type,
-            'total_amount': amount,  # 我们自定义的字段
-            'product_name': ticket_type,
+            'invoice_date': parsed_date,  # 使用解析后的日期
         }
     
     def _find_or_create_expense_product(self, name):
@@ -338,11 +390,17 @@ class OcrUploadWizard(models.TransientModel):
             
         import re
         from datetime import datetime
+        import logging
+        
+        _logger = logging.getLogger(__name__)
+        _logger.info("尝试解析日期: %s", date_str)
         
         # 尝试匹配常见的日期格式
         patterns = [
             # 2025年05月23日
             r'(\d{4})年(\d{1,2})月(\d{1,2})日',
+            # 2025年05月23
+            r'(\d{4})年(\d{1,2})月(\d{1,2})',
             # 2025-05-23
             r'(\d{4})-(\d{1,2})-(\d{1,2})',
             # 2025/05/23
@@ -365,8 +423,50 @@ class OcrUploadWizard(models.TransientModel):
                         year, month, day = groups
                     
                     try:
-                        return fields.Date.to_string(datetime(int(year), int(month), int(day)))
-                    except ValueError:
+                        date_obj = datetime(int(year), int(month), int(day))
+                        result = fields.Date.to_string(date_obj)
+                        _logger.info("成功解析日期: %s -> %s", date_str, result)
+                        return result
+                    except ValueError as e:
+                        _logger.warning("日期值错误: %s, 错误: %s", date_str, str(e))
                         continue
         
-        return False
+        # 如果上面的模式都不匹配，尝试匹配只有年月的格式
+        year_month_patterns = [
+            # 2025年05月
+            r'(\d{4})年(\d{1,2})月',
+            # 2025-05
+            r'(\d{4})-(\d{1,2})',
+            # 2025/05
+            r'(\d{4})/(\d{1,2})',
+        ]
+        
+        for pattern in year_month_patterns:
+            match = re.search(pattern, date_str)
+            if match:
+                groups = match.groups()
+                if len(groups) == 2:
+                    year, month = groups
+                    
+                    try:
+                        # 使用月份的第一天作为默认日期
+                        date_obj = datetime(int(year), int(month), 1)
+                        result = fields.Date.to_string(date_obj)
+                        _logger.info("成功解析年月日期: %s -> %s", date_str, result)
+                        return result
+                    except ValueError as e:
+                        _logger.warning("年月日期值错误: %s, 错误: %s", date_str, str(e))
+                        continue
+        
+        # 如果以上都不匹配，尝试直接使用fields.Date.to_date
+        try:
+            # 尝试直接转换
+            result = fields.Date.to_date(date_str)
+            if result:
+                _logger.info("使用Odoo内置函数解析日期成功: %s -> %s", date_str, result)
+                return result
+        except Exception as e:
+            _logger.warning("Odoo内置日期解析失败: %s, 错误: %s", date_str, str(e))
+        
+        _logger.warning("无法解析日期: %s，使用今天的日期", date_str)
+        return fields.Date.today()
