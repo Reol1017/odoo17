@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- 增值税发票表单视图 -->
+    <record id="vat_invoice_view_form" model="ir.ui.view">
+        <field name="name">vat.invoice.form</field>
+        <field name="model">vat.invoice</field>
+        <field name="inherit_id" eval="False"/>
+        <field name="arch" type="xml">
+            <form string="增值税发票费用">
+                <header>
+                    <button name="action_submit_expenses" string="提交" type="object" 
+                            class="oe_highlight" invisible="state != 'draft'"/>
+                    <button name="action_approve_expenses" string="批准" type="object" 
+                            class="oe_highlight" invisible="state != 'reported'" 
+                            groups="hr_expense.group_hr_expense_team_approver"/>
+                    <button name="action_view_sheet" type="object" string="查看报告" 
+                            class="oe_highlight" invisible="not sheet_id"/>
+                    <button name="action_reset_to_draft" string="重置为草稿" type="object" 
+                            invisible="state not in ['reported', 'refused']"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,reported,approved,done"/>
+                </header>
+                
+                <sheet>
+                    <div class="alert alert-success" role="alert" invisible="not vat_ocr_raw_data" groups="base.group_no_one">
+                        <i class="fa fa-check-circle"/> <strong>OCR识别</strong> - 此记录通过OCR自动识别创建
+                    </div>
+                    
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="费用描述..." readonly="not is_editable"/>
+                        </h1>
+                    </div>
+                    
+                    <!-- 基本费用信息 -->
+                    <group>
+                        <group string="基本信息">
+                            <field name="employee_id" required="1" readonly="not is_editable"/>
+                            <field name="date" required="1" readonly="not is_editable"/>
+                            <field name="product_id" required="1" readonly="not is_editable"/>
+                            <field name="is_editable" invisible="1"/>
+                            <field name="is_multiple_currency" invisible="1"/>
+                            <field name="product_has_cost" invisible="1"/>
+                            <field name="product_has_tax" invisible="1"/>
+                            <field name="is_vat_invoice" invisible="1"/>
+                            <field name="nb_attachment" invisible="1"/>
+                        </group>
+                        <group string="金额信息">
+                            <field name="unit_amount" required="1" readonly="not is_editable"/>
+                            <field name="quantity" required="1" readonly="not is_editable"/>
+                            <field name="total_amount" readonly="1"/>
+                            <field name="currency_id" groups="base.group_multi_currency"/>
+                            <field name="company_currency_id" invisible="1"/>
+                            <field name="company_id" invisible="1"/>
+                        </group>
+                        <group>
+                            <field name="payment_mode" widget="radio" readonly="sheet_id"/>
+                            <field name="accounting_date" invisible="state not in ['approved', 'done']"/>
+                        </group>
+                    </group>
+                    
+                    <!-- 税务信息 -->
+                    <group string="税务信息" invisible="1">
+                        <group>
+                            <label for="tax_ids"/>
+                            <div class="o_row">
+                                <field name="tax_ids" widget="many2many_tags" readonly="not is_editable" options="{'no_create': True}"/>
+                                <field name="tax_amount"/>
+                            </div>
+                        </group>
+                    </group>
+                    
+                    <!-- 发票信息 - 使用重命名的字段 -->
+                    <group string="发票信息">
+                        <group>
+                            <field name="vat_invoice_code"/>
+                            <field name="vat_invoice_number"/>
+                            <field name="vat_invoice_date"/>
+                            <field name="vat_invoice_type"/>
+                        </group>
+                        <group>
+                            <field name="vat_amount_without_tax"/>
+                            <field name="vat_tax_amount"/>
+                            <field name="vat_tax_rate"/>
+                            <field name="vat_amount_in_words"/>
+                        </group>
+                    </group>
+                    
+                    <!-- 当事方信息 -->
+                    <group>
+                        <group string="销售方信息">
+                            <field name="vat_vendor_name"/>
+                            <field name="vat_vendor_tax_id"/>
+                            <field name="vat_vendor_address"/>
+                            <field name="vat_vendor_bank"/>
+                        </group>
+                        <group string="购买方信息">
+                            <field name="vat_purchaser_name"/>
+                            <field name="vat_purchaser_tax_id"/>
+                            <field name="vat_purchaser_address"/>
+                            <field name="vat_purchaser_bank"/>
+                        </group>
+                    </group>
+                    
+                    <!-- 商品信息 -->
+                    <!-- <group string="商品信息">
+                        <group>
+                            <field name="vat_commodity_name"/>
+                            <field name="vat_commodity_type"/>
+                            <field name="vat_commodity_unit"/>
+                        </group>
+                        <group>
+                            <field name="vat_commodity_quantity"/>
+                            <field name="vat_commodity_price"/>
+                            <field name="vat_commodity_amount"/>
+                        </group>
+                    </group> -->
+                    
+                    <!-- 其他信息 -->
+                    <group>
+                        <group string="发票其他信息">
+                            <field name="vat_drawer"/>
+                            <field name="vat_payee"/>
+                            <field name="vat_checker"/>
+                        </group>
+                        <group string="费用其他信息">
+                            <field name="sheet_id"/>
+                            <field name="reference"/>
+                        </group>
+                    </group>
+                    
+                    <!-- 备注 -->
+                    <group>
+                        <field name="description" placeholder="内部备注..." readonly="not is_editable"/>
+                        <field name="vat_remarks" placeholder="发票备注..."/>
+                    </group>
+                    
+                    <!-- OCR数据 -->
+                    <notebook>
+                        <page string="OCR原始数据" groups="base.group_no_one">
+                            <field name="vat_ocr_raw_data" widget="text"/>
+                        </page>
+                        <page string="附件" invisible="nb_attachment == 0">
+                            <field name="attachment_ids" readonly="1"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                
+                <!-- 消息和活动 -->
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <!-- 增值税发票列表视图 -->
+    <record id="vat_invoice_view_tree" model="ir.ui.view">
+        <field name="name">vat.invoice.tree</field>
+        <field name="model">vat.invoice</field>
+        <field name="arch" type="xml">
+            <tree string="增值税发票费用">
+                <field name="date"/>
+                <field name="employee_id"/>
+                <field name="name"/>
+                <field name="vat_invoice_number"/>
+                <field name="vat_vendor_name"/>
+                <field name="unit_amount" sum="总金额"/>
+                <field name="state"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- 增值税发票搜索视图 -->
+    <record id="vat_invoice_view_search" model="ir.ui.view">
+        <field name="name">vat.invoice.search</field>
+        <field name="model">vat.invoice</field>
+        <field name="arch" type="xml">
+            <search string="增值税发票搜索">
+                <field name="name"/>
+                <field name="employee_id"/>
+                <field name="vat_invoice_number"/>
+                <field name="vat_vendor_name"/>
+                <field name="date"/>
+                <filter string="我的费用" name="my_expenses" domain="[('employee_id.user_id', '=', uid)]"/>
+                <filter string="草稿" name="draft" domain="[('state', '=', 'draft')]"/>
+                <filter string="已提交" name="reported" domain="[('state', '=', 'reported')]"/>
+                <filter string="已批准" name="approved" domain="[('state', '=', 'approved')]"/>
+                <separator/>
+                <filter string="本月" name="current_month" 
+                        domain="[('date', '&gt;=', context_today().strftime('%Y-%m-01'))]"/>
+                <filter string="OCR识别" name="ocr_recognized" domain="[('vat_ocr_raw_data', '!=', False)]"/>
+                <group expand="0" string="分组">
+                    <filter string="员工" name="group_employee" context="{'group_by': 'employee_id'}"/>
+                    <filter string="状态" name="group_state" context="{'group_by': 'state'}"/>
+                    <filter string="月份" name="group_month" context="{'group_by': 'date:month'}"/>
+                    <filter string="销售方" name="group_vendor" context="{'group_by': 'vat_vendor_name'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- 增值税发票动作 -->
+    <record id="vat_invoice_action" model="ir.actions.act_window">
+        <field name="name">增值税发票费用</field>
+        <field name="res_model">vat.invoice</field>
+        <field name="view_mode">tree,form</field>
+        <field name="context">{'search_default_my_expenses': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                创建您的第一个增值税发票费用
+            </p>
+            <p>
+                通过OCR识别功能可以自动创建增值税发票费用记录。
+            </p>
+        </field>
+    </record>
+
+    <!-- 菜单 -->
+    <menuitem id="vat_invoice_menu" 
+              name="增值税发票费用" 
+              parent="hr_expense.menu_hr_expense_root" 
+              action="vat_invoice_action" 
+              sequence="20"/>
+
+    <!-- OCR识别菜单 -->
+    <record id="action_ocr_recognize" model="ir.actions.act_window">
+        <field name="name">OCR识别</field>
+        <field name="res_model">ocr.upload.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <menuitem id="menu_ocr_recognize"
+              name="OCR识别"
+              action="action_ocr_recognize"
+              parent="hr_expense.menu_hr_expense_root"
+              sequence="5"/>
+</odoo>
