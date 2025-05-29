@@ -1,30 +1,48 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- 扩展hr.expense.view.form视图，添加OCR识别按钮 -->
+    <!-- 主视图：扩展hr.expense.view.form视图，添加OCR识别按钮和基础结构 -->
     <record id="hr_expense_view_form_with_ocr" model="ir.ui.view">
         <field name="name">hr.expense.form.with.ocr</field>
         <field name="model">hr.expense</field>
         <field name="inherit_id" ref="hr_expense.hr_expense_view_form"/>
         <field name="arch" type="xml">
+            <!-- OCR识别提示 -->
             <xpath expr="//sheet" position="before">
                 <div class="alert alert-info" role="alert" invisible="not ocr_recognized">
                     <strong>OCR已识别</strong> - 此记录包含OCR识别的数据
                 </div>
             </xpath>
             
+            <!-- 添加OCR字段 -->
             <xpath expr="//field[@name='product_id']" position="before">
-                <field name="ocr_recognized" invisible="0"/>
+                <field name="ocr_recognized" invisible="1"/>
+                <field name="ocr_invoice_type" readonly="1" invisible="not ocr_recognized"/>
             </xpath>
             
-            <!-- 在产品字段后添加备注字段 -->
+            <!-- 替换描述字段，根据是否OCR识别显示不同字段 -->
             <xpath expr="//field[@name='description']" position="replace">
                 <field name="remarks" placeholder="备注信息..." invisible="not ocr_recognized"/>
                 <field name="description" placeholder="描述..." invisible="ocr_recognized"/>
             </xpath>
             
-            <!-- 添加发票信息区域 -->
+            <!-- 添加发票信息容器 -->
             <xpath expr="//field[@name='product_id']/.." position="after">
-                <div invisible="not ocr_recognized">
+                <div name="invoice_info_container" invisible="not ocr_recognized">
+                    <!-- 发票信息将通过其他视图模块化插入到这里 -->
+                </div>
+            </xpath>
+            
+        </field>
+    </record>
+
+    <!-- 模块1：增值税发票信息视图 -->
+    <record id="hr_expense_vat_invoice_info" model="ir.ui.view">
+        <field name="name">hr.expense.form.vat.invoice.info</field>
+        <field name="model">hr.expense</field>
+        <field name="inherit_id" ref="hr_expense_view_form_with_ocr"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='invoice_info_container']" position="inside">
+                <div invisible="ocr_invoice_type != 'vat_invoice'">
                     <group string="发票信息">
                         <group>
                             <field name="invoice_number" string="发票号码"/>
@@ -52,26 +70,133 @@
                     </group>
                 </div>
             </xpath>
-            
-            <xpath expr="//button[@name='action_view_sheet']" position="before">
-                <button name="action_ocr_recognize" string="OCR识别" type="object" class="oe_highlight" invisible="sheet_id" groups="hr_expense.group_hr_expense_user"/>
-            </xpath>
         </field>
     </record>
-    
-    <!-- 扩展hr.expense.sheet.view.form视图，添加OCR识别按钮 -->
-    <record id="hr_expense_sheet_view_form_with_ocr" model="ir.ui.view">
-        <field name="name">hr.expense.sheet.form.with.ocr</field>
-        <field name="model">hr.expense.sheet</field>
-        <field name="inherit_id" ref="hr_expense.view_hr_expense_sheet_form"/>
+
+    <!-- 模块2：火车票信息视图 -->
+    <record id="hr_expense_train_ticket_info" model="ir.ui.view">
+        <field name="name">hr.expense.form.train.ticket.info</field>
+        <field name="model">hr.expense</field>
+        <field name="inherit_id" ref="hr_expense_view_form_with_ocr"/>
         <field name="arch" type="xml">
-            <xpath expr="//button[@name='action_submit_sheet']" position="before">
-                <button name="action_ocr_recognize" string="OCR识别" type="object" class="oe_highlight" groups="hr_expense.group_hr_expense_team_approver" invisible="state not in ['draft', 'submit']"/>
+            <xpath expr="//div[@name='invoice_info_container']" position="inside">
+                <div invisible="ocr_invoice_type != 'train_ticket'">
+                    <group string="火车票信息">
+                        <group>
+                            <field name="train_number" string="车次"/>
+                            <field name="departure_station" string="出发站"/>
+                            <field name="arrival_station" string="到达站"/>
+                            <field name="departure_time" string="出发时间"/>
+                        </group>
+                        <group>
+                            <field name="seat_class" string="座位等级"/>
+                            <field name="passenger_name" string="乘客姓名"/>
+                            <field name="passenger_id" string="身份证号"/>
+                            <field name="invoice_date" string="票据日期"/>
+                        </group>
+                    </group>
+                </div>
             </xpath>
         </field>
     </record>
-    
-    <!-- 扩展hr.expense.view.tree视图，添加OCR识别按钮 -->
+
+    <!-- 模块3：出租车票信息视图 -->
+    <record id="hr_expense_taxi_receipt_info" model="ir.ui.view">
+        <field name="name">hr.expense.form.taxi.receipt.info</field>
+        <field name="model">hr.expense</field>
+        <field name="inherit_id" ref="hr_expense_view_form_with_ocr"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='invoice_info_container']" position="inside">
+                <div invisible="ocr_invoice_type != 'taxi_receipt'">
+                    <group string="出租车票信息">
+                        <group>
+                            <field name="taxi_plate_number" string="车牌号"/>
+                            <field name="taxi_departure" string="上车时间"/>
+                            <field name="taxi_destination" string="下车时间"/>
+                        </group>
+                        <group>
+                            <field name="taxi_distance" string="里程"/>
+                            <field name="taxi_waiting_time" string="等候时间"/>
+                            <field name="invoice_date" string="票据日期"/>
+                        </group>
+                    </group>
+                </div>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- 模块4：飞机票信息视图 -->
+    <record id="hr_expense_air_ticket_info" model="ir.ui.view">
+        <field name="name">hr.expense.form.air.ticket.info</field>
+        <field name="model">hr.expense</field>
+        <field name="inherit_id" ref="hr_expense_view_form_with_ocr"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='invoice_info_container']" position="inside">
+                <div invisible="ocr_invoice_type != 'air_ticket'">
+                    <group string="飞机票信息">
+                        <group>
+                            <field name="flight_number" string="航班号"/>
+                            <field name="departure_airport" string="出发机场"/>
+                            <field name="arrival_airport" string="到达机场"/>
+                        </group>
+                        <group>
+                            <field name="flight_date" string="航班日期"/>
+                            <field name="passenger_class" string="舱位等级"/>
+                            <field name="passenger_name" string="乘客姓名"/>
+                        </group>
+                    </group>
+                </div>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- 通用其他发票信息视图 -->
+    <record id="hr_expense_other_invoice_info" model="ir.ui.view">
+        <field name="name">hr.expense.form.other.invoice.info</field>
+        <field name="model">hr.expense</field>
+        <field name="inherit_id" ref="hr_expense_view_form_with_ocr"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='invoice_info_container']" position="inside">
+                <div invisible="ocr_invoice_type in ['vat_invoice', 'train_ticket', 'taxi_receipt', 'air_ticket'] or not ocr_recognized">
+                    <group string="发票信息">
+                        <group>
+                            <field name="invoice_number" string="发票/票据号码"/>
+                            <field name="invoice_date" string="开票日期"/>
+                        </group>
+                        <group>
+                            <field name="vendor_name" string="销售方/服务方"/>
+                            <field name="total_amount" string="金额"/>
+                        </group>
+                    </group>
+                </div>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- 顶部菜单栏的OCR识别入口 - 修正位置 -->
+    <record id="action_ocr_recognize_main" model="ir.actions.act_window">
+        <field name="name">OCR识别</field>
+        <field name="res_model">ocr.upload.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                上传票据文件进行OCR识别
+            </p>
+            <p>
+                支持增值税发票、火车票等多种票据类型的自动识别，识别后将跳转到对应的记录。
+            </p>
+        </field>
+    </record>
+
+    <!-- 添加OCR识别到费用模块的主菜单下，而不是子菜单 -->
+    <menuitem id="menu_ocr_recognize_main"
+              name="OCR识别"
+              action="action_ocr_recognize_main"
+              parent="hr_expense.menu_hr_expense_root"
+              sequence="5"/>
+              
+    <!-- 扩展列表视图 - 移除错误的按钮 -->
     <record id="hr_expense_view_tree_with_ocr" model="ir.ui.view">
         <field name="name">hr.expense.tree.with.ocr</field>
         <field name="model">hr.expense</field>
@@ -81,23 +206,13 @@
                 <attribute name="decoration-info">ocr_recognized</attribute>
             </xpath>
             <xpath expr="//field[@name='date']" position="after">
-                <field name="ocr_recognized" invisible="0"/>
+                <field name="ocr_recognized" optional="hide"/>
+                <field name="ocr_invoice_type" optional="show"/>
                 <field name="vendor_name" optional="show"/>
                 <field name="invoice_number" optional="show"/>
-                <field name="total_amount" sum="金额合计" optional="show"/>
-                <field name="total_tax" sum="税额合计" optional="show"/>
-                <field name="amount_in_figures" sum="含税价格" optional="show"/>
+                <field name="total_amount" optional="show" sum="总金额"/>
             </xpath>
         </field>
     </record>
-    
-    <!-- 添加OCR识别按钮到顶部动作菜单 -->
-    <record id="action_ocr_recognize_expense" model="ir.actions.act_window">
-        <field name="name">OCR识别</field>
-        <field name="res_model">ocr.upload.wizard</field>
-        <field name="view_mode">form</field>
-        <field name="target">new</field>
-        <field name="binding_model_id" ref="hr_expense.model_hr_expense"/>
-        <field name="binding_view_types">list,form</field>
-    </record>
-</odoo> 
+
+</odoo>

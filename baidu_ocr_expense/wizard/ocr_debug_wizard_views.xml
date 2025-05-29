@@ -41,4 +41,4 @@
               action="action_ocr_debug_wizard"
               parent="hr_expense.menu_hr_expense_configuration"
               sequence="110"/>
-</odoo> 
+</odoo>

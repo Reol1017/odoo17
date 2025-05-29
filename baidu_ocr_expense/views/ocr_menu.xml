@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- 清理：确保没有绑定动作干扰 -->
+    <data noupdate="0">
+        <!-- OCR识别主动作 -->
+        <record id="action_ocr_main_menu" model="ir.actions.act_window">
+            <field name="name">OCR识别</field>
+            <field name="res_model">ocr.upload.wizard</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    上传票据文件进行OCR识别
+                </p>
+                <p>
+                    支持增值税发票、火车票等多种票据类型的自动识别。
+                </p>
+            </field>
+        </record>
+
+        <!-- 顶部菜单项 -->
+        <menuitem id="menu_ocr_main_top"
+                  name="OCR识别"
+                  action="action_ocr_main_menu"
+                  parent="hr_expense.menu_hr_expense_root"
+                  sequence="3"/>
+    </data>
+</odoo>

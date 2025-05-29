@@ -1,7 +1,11 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-access_ocr_debug_wizard,ocr.debug.wizard,model_ocr_debug_wizard,base.group_user,1,1,1,1
-access_ocr_upload_wizard,ocr.upload.wizard,model_ocr_upload_wizard,base.group_user,1,1,1,1
+access_vat_invoice_user,vat.invoice.user,model_vat_invoice,hr_expense.group_hr_expense_user,1,1,1,1
+access_vat_invoice_manager,vat.invoice.manager,model_vat_invoice,hr_expense.group_hr_expense_manager,1,1,1,1
+access_train_ticket_user,train.ticket.user,model_train_ticket,hr_expense.group_hr_expense_user,1,1,1,1
+access_train_ticket_manager,train.ticket.manager,model_train_ticket,hr_expense.group_hr_expense_manager,1,1,1,1
+access_ocr_upload_wizard_user,ocr.upload.wizard.user,model_ocr_upload_wizard,hr_expense.group_hr_expense_user,1,1,1,1
+access_ocr_upload_wizard_manager,ocr.upload.wizard.manager,model_ocr_upload_wizard,hr_expense.group_hr_expense_manager,1,1,1,1
+access_ocr_debug_wizard_user,ocr.debug.wizard.user,model_ocr_debug_wizard,base.group_user,1,1,1,1
+access_ocr_debug_wizard_manager,ocr.debug.wizard.manager,model_ocr_debug_wizard,base.group_system,1,1,1,1
 access_baidu_ocr_config_user,baidu.ocr.config.user,model_baidu_ocr_config,base.group_user,1,0,0,0
 access_baidu_ocr_config_manager,baidu.ocr.config.manager,model_baidu_ocr_config,base.group_system,1,1,1,1
-access_train_ticket_user,train.ticket.user,model_train_ticket,base.group_user,1,1,1,1
-access_vat_invoice_user,vat.invoice.user,model_vat_invoice,base.group_user,1,1,1,1

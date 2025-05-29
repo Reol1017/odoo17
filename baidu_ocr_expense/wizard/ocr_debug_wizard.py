@@ -26,7 +26,7 @@ class OcrDebugWizard(models.TransientModel):
         if not self.test_file:
             raise UserError(_('请先上传测试文件'))
         
-            # 获取OCR配置
+        # 获取OCR配置
         config = self.env['baidu.ocr.config'].get_default_config()
         if not config:
             raise UserError(_('未找到有效的百度OCR配置，请先设置配置信息'))
@@ -77,9 +77,7 @@ class OcrDebugWizard(models.TransientModel):
                 'res_model': 'ocr.debug.wizard',
                 'res_id': self.id,
                 'view_mode': 'form',
-                'view_type': 'form',
                 'target': 'new',
-                'flags': {'mode': 'readonly'},
                 'context': self.env.context
             }
             
@@ -93,4 +91,4 @@ class OcrDebugWizard(models.TransientModel):
             elif "IAM authentication failed" in error_message:
                 error_message += "\n可能原因：API Key或Secret Key不正确，请检查配置。"
             
-            raise UserError(_('OCR调试失败: %s') % error_message) 
+            raise UserError(_('OCR调试失败: %s') % error_message)
