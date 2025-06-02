@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- 继承费用报告列表视图，添加OCR识别按钮 -->
+    <record id="view_hr_expense_sheet_form_with_ocr" model="ir.ui.view">
+        <field name="name">hr.expense.sheet.form.with.ocr</field>
+        <field name="model">hr.expense.sheet</field>
+        <field name="inherit_id" ref="hr_expense.view_hr_expense_sheet_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <button name="%(action_ocr_expense_wizard)d" string="OCR识别" type="action" 
+                        class="btn-secondary" invisible="state not in ('draft', 'submit')"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- 添加OCR识别按钮到费用报告列表视图 -->
+    <record id="view_hr_expense_sheet_tree_with_ocr" model="ir.ui.view">
+        <field name="name">hr.expense.sheet.tree.with.ocr</field>
+        <field name="model">hr.expense.sheet</field>
+        <field name="inherit_id" ref="hr_expense.view_hr_expense_sheet_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//tree" position="attributes">
+                <attribute name="decoration-info">has_ocr_expenses == True</attribute>
+            </xpath>
+            <field name="state" position="before">
+                <field name="has_ocr_expenses" invisible="1"/>
+            </field>
+        </field>
+    </record>
+
+    <!-- 添加OCR识别按钮到动作菜单 -->
+    <record id="hr_expense.action_hr_expense_sheet_all" model="ir.actions.act_window">
+        <field name="binding_model_id" ref="model_hr_expense_sheet" />
+        <field name="binding_view_types">list</field>
+    </record>
+
+    <record id="action_ocr_expense_from_sheet" model="ir.actions.act_window">
+        <field name="name">OCR识别费用</field>
+        <field name="res_model">ocr.expense.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="binding_model_id" ref="hr_expense.model_hr_expense_sheet" />
+        <field name="binding_view_types">list,form</field>
+    </record>
+</odoo> 

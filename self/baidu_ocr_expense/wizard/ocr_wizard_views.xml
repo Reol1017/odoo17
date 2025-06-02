@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_ocr_expense_wizard_form" model="ir.ui.view">
+        <field name="name">ocr.expense.wizard.form</field>
+        <field name="model">ocr.expense.wizard</field>
+        <field name="arch" type="xml">
+            <form string="OCR费用识别">
+                <p class="alert alert-info">
+                    上传发票文件以自动识别并创建费用记录。支持图片格式(JPG、PNG、BMP)和PDF文件。
+                </p>
+                <group>
+                    <field name="invoice_file" widget="binary" string="选择发票文件" 
+                           options="{'accepted_file_extensions': '.jpg,.jpeg,.png,.bmp,.pdf'}"
+                           help="支持JPG、PNG、BMP图片格式和PDF文件"/>
+                    <field name="file_name" invisible="False"/>
+                    <field name="sheet_id" invisible="context.get('default_sheet_id', False) == False"/>
+                    <field name="company_id" invisible="True"/>
+                </group>
+                <footer>
+                    <button name="action_recognize" string="识别" type="object" class="btn-primary"/>
+                    <button string="取消" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_ocr_expense_wizard" model="ir.actions.act_window">
+        <field name="name">OCR费用识别</field>
+        <field name="res_model">ocr.expense.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>

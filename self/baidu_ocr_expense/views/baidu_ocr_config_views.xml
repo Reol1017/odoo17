@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_baidu_ocr_config_form" model="ir.ui.view">
+        <field name="name">baidu.ocr.config.form</field>
+        <field name="model">baidu.ocr.config</field>
+        <field name="arch" type="xml">
+            <form string="百度OCR配置">
+                <header>
+                    <button name="get_access_token" string="测试连接" type="object" class="oe_highlight"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="配置名称"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="API凭证">
+                            <field name="api_key"/>
+                            <field name="secret_key" password="True"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                        <group string="令牌信息">
+                            <field name="access_token" readonly="True"/>
+                            <field name="token_expiry" readonly="True"/>
+                            <field name="active"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_baidu_ocr_config_tree" model="ir.ui.view">
+        <field name="name">baidu.ocr.config.tree</field>
+        <field name="model">baidu.ocr.config</field>
+        <field name="arch" type="xml">
+            <tree string="百度OCR配置">
+                <field name="name"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+                <field name="token_expiry"/>
+                <field name="active"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="action_baidu_ocr_config" model="ir.actions.act_window">
+        <field name="name">百度OCR配置</field>
+        <field name="res_model">baidu.ocr.config</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <menuitem id="menu_baidu_ocr_config"
+              name="百度OCR"
+              parent="hr_expense.menu_hr_expense_configuration"
+              action="action_baidu_ocr_config"
+              sequence="100"/>
+</odoo>

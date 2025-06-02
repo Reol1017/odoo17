@@ -1,0 +1,14 @@
+.o_form_view .o_form_sheet .oe_title h1 {
+    margin: 0 0 10px 0;
+}
+
+.oe_highlight.btn-ocr {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.o_form_view .o_group.o_inner_group.ocr_result {
+    border: 1px solid #dee2e6;
+    padding: 10px;
+    background-color: #f8f9fa;
+}

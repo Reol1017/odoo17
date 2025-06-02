@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_baidu_ocr_config_user,baidu.ocr.config.user,model_baidu_ocr_config,group_baidu_ocr_user,1,0,0,0
+access_baidu_ocr_config_manager,baidu.ocr.config.manager,model_baidu_ocr_config,group_baidu_ocr_manager,1,1,1,1
+access_ocr_expense_wizard_user,ocr.expense.wizard.user,model_ocr_expense_wizard,base.group_user,1,1,1,1
+access_ocr_debug_wizard_user,ocr.debug.wizard.user,model_ocr_debug_wizard,base.group_user,1,1,1,1
