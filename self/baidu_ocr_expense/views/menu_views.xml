@@ -1,22 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- 添加OCR识别主菜单项 -->
+    <!-- 添加OCR识别主菜单项，直接指向上传发票向导 -->
     <menuitem id="menu_hr_expense_ocr_main"
               name="OCR识别"
               parent="hr_expense.menu_hr_expense_root"
-              sequence="15"/>
-              
-    <!-- 添加OCR识别子菜单项 -->
-    <menuitem id="menu_hr_expense_ocr_wizard"
-              name="上传发票"
-              parent="menu_hr_expense_ocr_main"
               action="action_ocr_expense_wizard"
-              sequence="10"/>
-              
-    <!-- 添加OCR识别的费用子菜单项 -->
-    <menuitem id="menu_hr_expense_ocr_expenses"
-              name="OCR识别的费用"
-              parent="menu_hr_expense_ocr_main"
-              action="action_hr_expense_ocr"
-              sequence="20"/>
+              sequence="15"/>
 </odoo> 

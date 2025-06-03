@@ -74,13 +74,13 @@
                 
                 <!-- 其他类型发票 -->
                 <group string="发票信息" invisible="not ocr_extracted or invoice_type_category not in ('others', 'quota_invoice', 'air_ticket', 'roll_normal_invoice', 'printed_invoice', 'printed_elec_invoice', 'bus_ticket', 'toll_invoice', 'ferry_ticket', 'motor_vehicle_invoice', 'used_vehicle_invoice', 'taxi_online_ticket', 'limit_invoice', 'shopping_receipt', 'pos_invoice')">
-                    <group>
+                        <group>
                         <field name="vat_invoice_number" readonly="True"/>
                         <field name="vat_invoice_date" readonly="True"/>
                         <field name="vat_vendor_name" readonly="True"/>
                         <field name="vat_amount_with_tax" readonly="False"/>
                     </group>
-                </group>
+                        </group>
             </xpath>
         </field>
     </record>

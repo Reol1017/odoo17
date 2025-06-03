@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- 合同模板列表视图 -->
+    <record id="contract_template_tree_view" model="ir.ui.view">
+        <field name="name">contract.template.tree</field>
+        <field name="model">contract.template</field>
+        <field name="arch" type="xml">
+            <tree string="合同模板">
+                <field name="name"/>
+                <field name="contract_type"/>
+                <field name="template_filename"/>
+                <field name="user_id"/>
+                <field name="active"/>
+                <field name="create_date"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- 合同模板表单视图 -->
+    <record id="contract_template_form_view" model="ir.ui.view">
+        <field name="name">contract.template.form</field>
+        <field name="model">contract.template</field>
+        <field name="arch" type="xml">
+            <form string="合同模板">
+                <header>
+                    <button name="action_preview_variables" string="预览变量" type="object" class="oe_highlight"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="toggle_active" type="object" class="oe_stat_button" icon="fa-archive">
+                            <field name="active" widget="boolean_button" options='{"terminology": "archive"}'/>
+                        </button>
+                    </div>
+                    
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="模板名称..."/>
+                        </h1>
+                    </div>
+                    
+                    <group>
+                        <group>
+                            <field name="contract_type"/>
+                            <field name="user_id"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                        <group>
+                            <field name="create_date" readonly="1"/>
+                            <field name="write_date" readonly="1"/>
+                        </group>
+                    </group>
+                    
+                    <notebook>
+                        <page string="模板文件" name="template_file">
+                            <group>
+                                <field name="template_file" filename="template_filename"/>
+                                <field name="template_filename" invisible="1"/>
+                                <field name="description" placeholder="描述模板用途..."/>
+                            </group>
+                        </page>
+                        
+                        <page string="模板变量" name="template_variables">
+                            <group>
+                                <field name="template_variables" readonly="1" 
+                                       help="从模板文件中自动提取的变量列表。使用 {{变量名}} 格式在模板中定义变量。"/>
+                            </group>
+                            <div class="alert alert-info" role="alert">
+                                <strong>提示：</strong> 在模板文件中使用 {{变量名}} 格式定义变量，例如：{{contract_title}}、{{party_a_name}}、{{contract_amount}} 等。
+                                <br/>系统会自动识别这些变量，并在生成合同时进行替换。
+                            </div>
+                        </page>
+                    </notebook>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <!-- 合同模板搜索视图 -->
+    <record id="contract_template_search_view" model="ir.ui.view">
+        <field name="name">contract.template.search</field>
+        <field name="model">contract.template</field>
+        <field name="arch" type="xml">
+            <search string="搜索合同模板">
+                <field name="name"/>
+                <field name="contract_type"/>
+                <field name="user_id"/>
+                <separator/>
+                <filter string="启用的" name="active" domain="[('active', '=', True)]"/>
+                <filter string="已归档的" name="inactive" domain="[('active', '=', False)]"/>
+                <separator/>
+                <filter string="我的模板" name="my_templates" domain="[('user_id', '=', uid)]"/>
+                <group expand="0" string="分组">
+                    <filter string="合同类型" name="group_by_type" context="{'group_by': 'contract_type'}"/>
+                    <filter string="负责人" name="group_by_user" context="{'group_by': 'user_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- 合同模板预览变量弹窗 -->
+    <record id="contract_template_preview_form" model="ir.ui.view">
+        <field name="name">contract.template.preview.form</field>
+        <field name="model">contract.template</field>
+        <field name="arch" type="xml">
+            <form string="模板变量预览">
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+                    
+                    <group>
+                        <field name="contract_type" readonly="1"/>
+                        <field name="template_filename" readonly="1"/>
+                    </group>
+                    
+                    <separator string="可用变量"/>
+                    <field name="template_variables" readonly="1" nolabel="1"/>
+                    
+                    <div class="alert alert-info" role="alert">
+                        <strong>变量说明：</strong>
+                        <ul>
+                            <li><strong>contract_number</strong>: 合同编号</li>
+                            <li><strong>contract_title</strong>: 合同标题</li>
+                            <li><strong>contract_date</strong>: 合同日期</li>
+                            <li><strong>start_date</strong>: 开始日期</li>
+                            <li><strong>end_date</strong>: 结束日期</li>
+                            <li><strong>party_a_name</strong>: 甲方名称</li>
+                            <li><strong>party_a_contact</strong>: 甲方联系人</li>
+                            <li><strong>party_a_phone</strong>: 甲方电话</li>
+                            <li><strong>party_a_address</strong>: 甲方地址</li>
+                            <li><strong>party_b_name</strong>: 乙方名称</li>
+                            <li><strong>party_b_contact</strong>: 乙方联系人</li>
+                            <li><strong>party_b_phone</strong>: 乙方电话</li>
+                            <li><strong>party_b_address</strong>: 乙方地址</li>
+                            <li><strong>contract_amount</strong>: 合同金额</li>
+                            <li><strong>currency</strong>: 币种</li>
+                        </ul>
+                    </div>
+                </sheet>
+                <footer>
+                    <button string="关闭" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- 合同模板菜单动作 -->
+    <record id="contract_template_action" model="ir.actions.act_window">
+        <field name="name">合同模板</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">contract.template</field>
+        <field name="view_mode">tree,form</field>
+        <field name="search_view_id" ref="contract_template_search_view"/>
+        <field name="context">{'search_default_active': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                创建您的第一个合同模板！
+            </p>
+            <p>
+                合同模板用于定义合同的基础格式和内容。<br/>
+                您可以上传Word文档或文本文件作为模板，并在其中使用 {{变量名}} 格式定义可替换的变量。
+            </p>
+        </field>
+    </record>
+
+</odoo>

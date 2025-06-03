@@ -118,15 +118,17 @@ class HrExpense(models.Model):
     
     @api.onchange('vat_tax_rate')
     def _onchange_vat_tax_rate(self):
-        """当OCR识别的税率变化时，如果不是多种税率，同步到原生税率"""
-        if self.ocr_extracted and self.vat_tax_rate and self.vat_tax_rate != "多种税率":
-            # 尝试提取数字部分
-            try:
-                # 移除%符号并转换为数字
-                tax_rate_str = self.vat_tax_rate.replace('%', '').replace('％', '').strip()
-                tax_rate = float(tax_rate_str)
-                # 更新原生税率（如果有相关字段）
-                if hasattr(self, 'tax_ids'):
+        """当OCR识别的税率变化时，同步到原生税率"""
+        if self.ocr_extracted and hasattr(self, 'tax_ids'):
+            # 如果是多种税率或者特殊票据类型，清空税率
+            if self.has_multiple_tax_rates or self.invoice_type_category in ['train_ticket', 'bus_ticket', 'air_ticket', 'ferry_ticket', 'taxi_receipt', 'taxi_online_ticket']:
+                self.tax_ids = [(5, 0, 0)]  # 清空税率
+            # 如果有具体税率，尝试设置
+            elif self.vat_tax_rate and self.vat_tax_rate != "多种税率" and self.vat_tax_rate != "0%":
+                try:
+                    # 移除%符号并转换为数字
+                    tax_rate_str = self.vat_tax_rate.replace('%', '').replace('％', '').strip()
+                    tax_rate = float(tax_rate_str)
                     # 查找对应税率的税收记录
                     tax = self.env['account.tax'].search([
                         ('type_tax_use', '=', 'purchase'),
@@ -135,8 +137,15 @@ class HrExpense(models.Model):
                     ], limit=1)
                     if tax:
                         self.tax_ids = [(6, 0, [tax.id])]
-            except (ValueError, AttributeError):
-                pass
+                    else:
+                        # 如果找不到对应税率，清空税率
+                        self.tax_ids = [(5, 0, 0)]
+                except (ValueError, AttributeError):
+                    # 如果转换失败，清空税率
+                    self.tax_ids = [(5, 0, 0)]
+            else:
+                # 其他情况，清空税率
+                self.tax_ids = [(5, 0, 0)]
     
     @api.model
     def create_from_ocr(self, attachment_id):
@@ -319,9 +328,16 @@ class HrExpense(models.Model):
                 'train_ticket_num': ocr_result.get('ticket_num'),
                 'train_elec_ticket_num': ocr_result.get('elec_ticket_num'),
             })
+            # 火车票没有税率，清空税率
+            if hasattr(self, 'tax_ids'):
+                vals['tax_ids'] = [(5, 0, 0)]  # 清空税率
         
-        # 如果不是多种税率，尝试设置原生税率
-        if not has_multiple_tax_rates and vat_invoice_tax_rate != "0%":
+        # 如果是多种税率或者特殊票据类型，清空税率
+        if has_multiple_tax_rates or invoice_type_category in ['train_ticket', 'bus_ticket', 'air_ticket', 'ferry_ticket', 'taxi_receipt', 'taxi_online_ticket']:
+            if hasattr(self, 'tax_ids'):
+                vals['tax_ids'] = [(5, 0, 0)]  # 清空税率
+        # 如果不是多种税率且不是特殊票据，尝试设置原生税率
+        elif vat_invoice_tax_rate != "0%":
             try:
                 # 移除%符号并转换为数字
                 tax_rate_str = vat_invoice_tax_rate.replace('%', '').replace('％', '').strip()
@@ -334,8 +350,15 @@ class HrExpense(models.Model):
                 ], limit=1)
                 if tax:
                     vals['tax_ids'] = [(6, 0, [tax.id])]
+                else:
+                    # 如果找不到对应税率，也清空税率
+                    vals['tax_ids'] = [(5, 0, 0)]
             except (ValueError, AttributeError):
-                pass
+                # 如果转换失败，清空税率
+                vals['tax_ids'] = [(5, 0, 0)]
+        else:
+            # 税率为0%，清空税率
+            vals['tax_ids'] = [(5, 0, 0)]
         
         _logger.info("准备的费用数据: %s", vals)
         return vals

@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_contract_template_user,contract.template user,model_contract_template,base.group_user,1,1,1,0
+access_contract_template_manager,contract.template manager,model_contract_template,base.group_system,1,1,1,1
+access_contract_generation_user,contract.generation user,model_contract_generation,base.group_user,1,1,1,0
+access_contract_generation_manager,contract.generation manager,model_contract_generation,base.group_system,1,1,1,1

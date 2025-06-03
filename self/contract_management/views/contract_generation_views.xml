@@ -1,0 +1,322 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- 合同生成列表视图 -->
+    <record id="contract_generation_tree_view" model="ir.ui.view">
+        <field name="name">contract.generation.tree</field>
+        <field name="model">contract.generation</field>
+        <field name="arch" type="xml">
+            <tree string="合同生成" decoration-info="state=='draft'" decoration-success="state=='generated'" decoration-muted="state=='cancelled'">
+                <field name="name"/>
+                <field name="contract_title"/>
+                <field name="template_type"/>
+                <field name="party_a_partner_id"/>
+                <field name="party_a_name"/>
+                <field name="party_b_name"/>
+                <field name="contract_amount" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                <field name="currency_id" invisible="1"/>
+                <field name="contract_date"/>
+                <field name="state" widget="badge"/>
+                <field name="user_id" widget="many2one_avatar_user"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- 合同生成表单视图 -->
+    <record id="contract_generation_form_view" model="ir.ui.view">
+        <field name="name">contract.generation.form</field>
+        <field name="model">contract.generation</field>
+        <field name="arch" type="xml">
+            <form string="合同生成">
+                <header>
+                    <button name="action_generate_contract" string="生成合同" type="object" 
+                            class="oe_highlight" invisible="state != 'draft'"/>
+                    <button name="action_confirm" string="确认合同" type="object" 
+                            class="oe_highlight" invisible="state != 'generated'"/>
+                    <button name="action_reset_to_draft" string="重置为草稿" type="object" 
+                            invisible="state in ['draft', 'cancelled']"/>
+                    <button name="action_cancel" string="取消" type="object" 
+                            invisible="state == 'cancelled'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,generated,confirmed"/>
+                </header>
+                
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_download_word" type="object" class="oe_stat_button" icon="fa-file-word-o"
+                                invisible="not generated_word" string="下载Word">
+                        </button>
+                    </div>
+                    
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                        <h2>
+                            <field name="contract_title" placeholder="合同标题..."/>
+                        </h2>
+                    </div>
+                    
+                    <group>
+                        <group>
+                            <field name="template_id" options="{'no_create': True}"/>
+                            <field name="template_type" readonly="1"/>
+                            <field name="user_id"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                        <group>
+                            <field name="contract_date"/>
+                            <field name="signing_date"/>
+                            <field name="signing_date_year" invisible="1"/>
+                            <field name="signing_date_month" invisible="1"/>
+                            <field name="signing_date_day" invisible="1"/>
+                            <field name="start_date"/>
+                            <field name="end_date"/>
+                            <field name="after_prepayment_days"/>
+                        </group>
+                    </group>
+                    
+                    <notebook>
+                        <page string="合同方信息" name="parties">
+                            <group>
+                                <group string="甲方信息">
+                                    <field name="party_a_partner_id" options="{'no_create_edit': True}"/>
+                                    <field name="party_a_name"/>
+                                    <field name="party_a_child_partner_id" options="{'no_create_edit': True}" context="{'show_address': 0, 'show_parent_name': False}"/>
+                                    <field name="party_a_legal_representative"/>
+                                    <field name="party_a_agent"/>
+                                    <field name="party_a_contact"/>
+                                    <field name="party_a_phone"/>
+                                    <field name="party_a_address"/>
+                                    <field name="party_a_bank"/>
+                                    <field name="party_a_account"/>
+                                    <field name="party_a_tax_id"/>
+                                </group>
+                                <group string="乙方信息">
+                                    <field name="party_b_name"/>
+                                    <field name="party_b_agent"/>
+                                    <field name="party_b_contact"/>
+                                    <field name="party_b_phone"/>
+                                    <field name="party_b_address"/>
+                                </group>
+                            </group>
+                        </page>
+                        
+                        <page string="工程信息" name="project">
+                            <group>
+                                <group>
+                                    <field name="project_name"/>
+                                    <field name="project_location"/>
+                                    <field name="project_total_price" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                                </group>
+                            </group>
+                        </page>
+                        
+                        <page string="付款信息" name="payment">
+                            <group>
+                                <group>
+                                    <field name="deposit_percentage"/>
+                                    <field name="deposit_amount" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                                    <field name="loan_percentage"/>
+                                    <field name="loan_amount" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                                </group>
+                                <group string="甲方付款联系人">
+                                    <field name="party_a_payment_contact"/>
+                                    <field name="party_a_payment_contact_phone"/>
+                                </group>
+                            </group>
+                        </page>
+                        
+                        <page string="收货和验收信息" name="inspection">
+                            <group>
+                                <group string="甲方收货信息">
+                                    <field name="party_a_invoice_receiver"/>
+                                    <field name="party_a_goods_receiver"/>
+                                    <field name="party_a_goods_receiver_phone"/>
+                                </group>
+                                <group string="甲方验收信息">
+                                    <field name="party_a_inspector"/>
+                                    <field name="party_a_inspector_phone"/>
+                                </group>
+                            </group>
+                        </page>
+                        
+                        <page string="合同金额" name="amount">
+                            <group>
+                                <group>
+                                    <field name="contract_amount" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                                    <field name="currency_id"/>
+                                </group>
+                            </group>
+                        </page>
+                        
+                        <page string="自定义字段" name="custom_fields">
+                            <group>
+                                <field name="custom_fields" placeholder='输入JSON格式的自定义字段值，例如：{"项目名称": "系统开发", "工期": "30天"}'/>
+                            </group>
+                            <div class="alert alert-info" role="alert">
+                                <strong>自定义字段说明：</strong><br/>
+                                在此处可以输入JSON格式的自定义字段值，这些值将在生成合同时替换模板中对应的变量。<br/>
+                                格式示例：{"变量名1": "值1", "变量名2": "值2"}<br/>
+                                确保变量名与模板中定义的变量名一致。
+                            </div>
+                        </page>
+                        
+                        <page string="生成的文件" name="generated_files" invisible="state == 'draft'">
+                            <group>
+                                <group string="Word文档">
+                                    <field name="generated_word" filename="generated_word_filename"/>
+                                    <field name="generated_word_filename" invisible="1"/>
+                                </group>
+                            </group>
+                        </page>
+                        
+                        <page string="备注" name="notes">
+                            <field name="notes" placeholder="输入备注信息..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+                
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <!-- 合同生成搜索视图 -->
+    <record id="contract_generation_search_view" model="ir.ui.view">
+        <field name="name">contract.generation.search</field>
+        <field name="model">contract.generation</field>
+        <field name="arch" type="xml">
+            <search string="搜索合同生成">
+                <field name="name"/>
+                <field name="contract_title"/>
+                <field name="party_a_partner_id"/>
+                <field name="party_a_name"/>
+                <field name="party_b_name"/>
+                <field name="template_id"/>
+                <field name="project_name"/>
+                <separator/>
+                <filter string="草稿" name="draft" domain="[('state', '=', 'draft')]"/>
+                <filter string="已生成" name="generated" domain="[('state', '=', 'generated')]"/>
+                <filter string="已确认" name="confirmed" domain="[('state', '=', 'confirmed')]"/>
+                <filter string="已取消" name="cancelled" domain="[('state', '=', 'cancelled')]"/>
+                <separator/>
+                <filter string="我的合同" name="my_contracts" domain="[('user_id', '=', uid)]"/>
+                <filter string="本月" name="this_month" domain="[('create_date', '>=', (context_today() - relativedelta(months=1)).strftime('%Y-%m-%d'))]"/>
+                <separator/>
+                <filter string="创建日期" name="filter_create_date" date="create_date"/>
+                <filter string="合同日期" name="filter_contract_date" date="contract_date"/>
+                <filter string="签订日期" name="filter_signing_date" date="signing_date"/>
+                <group expand="0" string="分组">
+                    <filter string="状态" name="group_by_state" context="{'group_by': 'state'}"/>
+                    <filter string="模板类型" name="group_by_template_type" context="{'group_by': 'template_type'}"/>
+                    <filter string="甲方" name="group_by_party_a" context="{'group_by': 'party_a_partner_id'}"/>
+                    <filter string="负责人" name="group_by_user" context="{'group_by': 'user_id'}"/>
+                    <filter string="创建日期" name="group_by_create_date" context="{'group_by': 'create_date:month'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- 合同生成看板视图 -->
+    <record id="contract_generation_kanban_view" model="ir.ui.view">
+        <field name="name">contract.generation.kanban</field>
+        <field name="model">contract.generation</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="state" class="o_kanban_small_column">
+                <field name="name"/>
+                <field name="contract_title"/>
+                <field name="party_a_partner_id"/>
+                <field name="party_a_name"/>
+                <field name="party_b_name"/>
+                <field name="contract_amount"/>
+                <field name="currency_id"/>
+                <field name="contract_date"/>
+                <field name="state"/>
+                <field name="user_id"/>
+                <field name="project_name"/>
+                <templates>
+                    <t t-name="kanban-box">
+                        <div class="oe_kanban_card oe_kanban_global_click">
+                            <div class="o_kanban_card_header">
+                                <div class="o_kanban_card_header_title">
+                                    <div class="o_primary"><field name="name"/></div>
+                                    <div class="text-muted"><field name="contract_title"/></div>
+                                </div>
+                            </div>
+                            <div class="o_kanban_card_content">
+                                <div class="o_kanban_card_manage_pane">
+                                    <div class="row">
+                                        <div class="col-6 o_kanban_primary_left">
+                                            <button class="btn btn-primary btn-sm" name="action_generate_contract" type="object" t-if="record.state.raw_value == 'draft'">生成合同</button>
+                                            <button class="btn btn-success btn-sm" name="action_confirm" type="object" t-if="record.state.raw_value == 'generated'">确认</button>
+                                        </div>
+                                        <div class="col-6 o_kanban_primary_right">
+                                            <div class="text-right">
+                                                <field name="user_id" widget="many2one_avatar_user"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="o_kanban_card_lower_content">
+                                    <div class="row">
+                                        <div class="col-8">
+                                            <div>甲方: <field name="party_a_name"/></div>
+                                            <div>乙方: <field name="party_b_name"/></div>
+                                            <div t-if="record.project_name.raw_value">工程: <field name="project_name"/></div>
+                                        </div>
+                                        <div class="col-4 text-right">
+                                            <div><field name="contract_amount" widget="monetary" options="{'currency_field': 'currency_id'}"/></div>
+                                            <div><field name="contract_date"/></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- 合同生成菜单动作 -->
+    <record id="contract_generation_action" model="ir.actions.act_window">
+        <field name="name">合同生成</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">contract.generation</field>
+        <field name="view_mode">kanban,tree,form</field>
+        <field name="search_view_id" ref="contract_generation_search_view"/>
+        <field name="context">{'search_default_draft': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                创建您的第一个合同！
+            </p>
+            <p>
+                选择合同模板，填写相关信息，系统将自动生成Word格式的合同文档。<br/>
+                您可以下载生成的合同文档进行使用。
+            </p>
+        </field>
+    </record>
+
+    <!-- 序列号配置 -->
+    <record id="seq_contract_generation" model="ir.sequence">
+        <field name="name">合同生成序列</field>
+        <field name="code">contract.generation</field>
+        <field name="prefix">CT</field>
+        <field name="padding">5</field>
+        <field name="number_next">1</field>
+        <field name="number_increment">1</field>
+    </record>
+
+    <!-- 主菜单 -->
+    <menuitem id="contract_management_main_menu" name="合同管理" sequence="10"/>
+    
+    <!-- 子菜单 -->
+    <menuitem id="contract_generation_menu" name="合同生成" parent="contract_management_main_menu" 
+              action="contract_generation_action" sequence="10"/>
+    <menuitem id="contract_template_menu" name="合同模板" parent="contract_management_main_menu" 
+              action="contract_template_action" sequence="20"/>
+
+</odoo>

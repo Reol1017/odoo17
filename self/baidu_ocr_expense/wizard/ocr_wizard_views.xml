@@ -12,7 +12,7 @@
                     <field name="invoice_file" widget="binary" string="选择发票文件" 
                            options="{'accepted_file_extensions': '.jpg,.jpeg,.png,.bmp,.pdf'}"
                            help="支持JPG、PNG、BMP图片格式和PDF文件"/>
-                    <field name="file_name" invisible="False"/>
+                    <field name="file_name" invisible="True"/>
                     <field name="sheet_id" invisible="context.get('default_sheet_id', False) == False"/>
                     <field name="company_id" invisible="True"/>
                 </group>
