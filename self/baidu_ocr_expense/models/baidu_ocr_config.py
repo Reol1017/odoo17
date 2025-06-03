@@ -124,6 +124,7 @@ class BaiduOcrConfig(models.Model):
             'drawer': None,
             'amount_in_figuers': 0.0,
             'tax_rates': [],
+            'invoice_type_category': 'vat_invoice',  # 默认为增值税发票
         }
         
         if 'words_result' not in result:
@@ -143,6 +144,11 @@ class BaiduOcrConfig(models.Model):
         if isinstance(words_result, list) and len(words_result) > 0:
             # 取第一个发票的识别结果
             first_invoice = words_result[0]
+            
+            # 设置发票类型分类
+            if 'type' in first_invoice:
+                invoice_type = first_invoice.get('type')
+                processed_data['invoice_type_category'] = invoice_type
             
             if 'result' in first_invoice:
                 invoice_data = first_invoice['result']
@@ -191,6 +197,10 @@ class BaiduOcrConfig(models.Model):
                     processed_data['commodity_name'] = self._get_invoice_type_description(invoice_type)
                 
                 processed_data['description'] = processed_data.get('commodity_name', 'OCR识别费用')
+                
+                # 处理特定类型的发票数据
+                if invoice_type == 'train_ticket':
+                    self._process_train_ticket_data(invoice_data, processed_data)
             
         # 如果还是没有有效数据，尝试其他格式
         if not processed_data.get('total_amount') and not processed_data.get('vendor'):
@@ -313,6 +323,7 @@ class BaiduOcrConfig(models.Model):
                     'invoice_number': f"{vat_data.get('invoice_code', {}).get('word', '')} {vat_data.get('invoice_number', {}).get('word', '')}".strip(),
                     'description': vat_data.get('title', {}).get('word', '增值税发票'),
                     'amount_in_figuers': self._parse_amount(vat_data.get('amount_in_figuers', {}).get('word', '0')),
+                    'invoice_type_category': 'vat_invoice',
                 })
                 
                 # 如果有税率，添加到税率列表
@@ -328,6 +339,7 @@ class BaiduOcrConfig(models.Model):
                     'invoice_number': receipt_data.get('receipt_number', {}).get('word', ''),
                     'description': receipt_data.get('title', {}).get('word', '收据'),
                     'amount_in_figuers': self._parse_amount(receipt_data.get('total', {}).get('word', '0')),
+                    'invoice_type_category': 'others',
                 })
                 # 收据通常没有税率
                 processed_data['tax_rates'] = ['0%']
@@ -342,6 +354,7 @@ class BaiduOcrConfig(models.Model):
                     'invoice_number': f"{taxi_data.get('invoice_code', {}).get('word', '')} {taxi_data.get('invoice_number', {}).get('word', '')}".strip(),
                     'description': f"出租车费 {taxi_data.get('date', {}).get('word', '')}",
                     'amount_in_figuers': total_amount,
+                    'invoice_type_category': 'taxi_receipt',
                 })
                 # 出租车票通常是3%税率
                 processed_data['tax_rates'] = ['3%']
@@ -356,6 +369,18 @@ class BaiduOcrConfig(models.Model):
                     'invoice_number': train_data.get('ticket_number', {}).get('word', ''),
                     'description': f"火车票 {train_data.get('starting_station', {}).get('word', '')} 到 {train_data.get('destination_station', {}).get('word', '')}",
                     'amount_in_figuers': total_amount,
+                    'invoice_type_category': 'train_ticket',
+                    # 添加火车票特有字段
+                    'starting_station': train_data.get('starting_station', {}).get('word', ''),
+                    'destination_station': train_data.get('destination_station', {}).get('word', ''),
+                    'seat_category': train_data.get('seat_category', {}).get('word', ''),
+                    'seat_num': train_data.get('seat_num', {}).get('word', ''),
+                    'passenger_name': train_data.get('name', {}).get('word', ''),
+                    'ID_card': train_data.get('ID_card', {}).get('word', ''),
+                    'train_num': train_data.get('train_num', {}).get('word', ''),
+                    'time': train_data.get('time', {}).get('word', ''),
+                    'ticket_num': train_data.get('ticket_num', {}).get('word', ''),
+                    'elec_ticket_num': train_data.get('elec_ticket_num', {}).get('word', ''),
                 })
                 # 火车票通常没有税率
                 processed_data['tax_rates'] = ['0%']
@@ -373,6 +398,7 @@ class BaiduOcrConfig(models.Model):
                     'vendor': '未知供应商',
                     'total_amount': 0.0,
                     'amount_in_figuers': 0.0,
+                    'invoice_type_category': 'others',
                 })
                 # 默认没有税率
                 processed_data['tax_rates'] = ['0%']
@@ -606,4 +632,35 @@ class BaiduOcrConfig(models.Model):
             except (ValueError, TypeError):
                 pass
         
-        return 0.0 
+        return 0.0
+    
+    def _process_train_ticket_data(self, invoice_data, processed_data):
+        """处理火车票特有数据"""
+        # 提取火车票特有字段
+        processed_data.update({
+            'starting_station': self._extract_field_value(invoice_data, 'starting_station'),
+            'destination_station': self._extract_field_value(invoice_data, 'destination_station'),
+            'seat_category': self._extract_field_value(invoice_data, 'seat_category'),
+            'seat_num': self._extract_field_value(invoice_data, 'seat_num'),
+            'passenger_name': self._extract_field_value(invoice_data, 'name'),
+            'ID_card': self._extract_field_value(invoice_data, 'ID_card'),
+            'train_num': self._extract_field_value(invoice_data, 'train_num'),
+            'time': self._extract_field_value(invoice_data, 'time'),
+            'ticket_num': self._extract_field_value(invoice_data, 'ticket_num'),
+            'elec_ticket_num': self._extract_field_value(invoice_data, 'elec_ticket_num'),
+        })
+        
+        # 设置金额信息
+        ticket_price = self._extract_amount(invoice_data, 'ticket_rates')
+        if ticket_price > 0:
+            processed_data['total_amount'] = ticket_price
+            processed_data['amount_in_figuers'] = ticket_price
+        
+        # 设置描述
+        starting = processed_data.get('starting_station') or ''
+        destination = processed_data.get('destination_station') or ''
+        train_num = processed_data.get('train_num') or ''
+        if starting and destination:
+            processed_data['description'] = f"火车票 {train_num} {starting}→{destination}"
+        else:
+            processed_data['description'] = f"火车票 {train_num}" 

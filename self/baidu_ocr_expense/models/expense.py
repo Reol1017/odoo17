@@ -18,6 +18,35 @@ class HrExpense(models.Model):
     unit_amount = fields.Float(string='单价', digits='Product Price')
     amount = fields.Monetary(string='金额')
     
+    # 发票类型分类
+    INVOICE_TYPE_CATEGORIES = [
+        ('vat_invoice', '增值税发票'),
+        ('taxi_receipt', '出租车票'),
+        ('train_ticket', '火车票'),
+        ('quota_invoice', '定额发票'),
+        ('air_ticket', '飞机行程单'),
+        ('roll_normal_invoice', '卷票'),
+        ('printed_invoice', '机打发票'),
+        ('printed_elec_invoice', '机打电子发票'),
+        ('bus_ticket', '汽车票'),
+        ('toll_invoice', '过路过桥费发票'),
+        ('ferry_ticket', '船票'),
+        ('motor_vehicle_invoice', '机动车销售发票'),
+        ('used_vehicle_invoice', '二手车发票'),
+        ('taxi_online_ticket', '网约车行程单'),
+        ('limit_invoice', '限额发票'),
+        ('shopping_receipt', '购物小票'),
+        ('pos_invoice', 'POS小票'),
+        ('others', '其他'),
+    ]
+    
+    invoice_type_category = fields.Selection(
+        INVOICE_TYPE_CATEGORIES, 
+        string='发票类型分类',
+        default='vat_invoice',
+        help='OCR识别的发票类型分类'
+    )
+    
     # 中国发票字段
     vat_invoice_code = fields.Char(string='发票代码')
     vat_invoice_number = fields.Char(string='发票号码')
@@ -33,6 +62,18 @@ class HrExpense(models.Model):
     vat_tax_amount = fields.Monetary(string='发票税额')
     vat_amount_with_tax = fields.Monetary(string='含税金额')
     vat_amount_in_words = fields.Char(string='金额大写')
+    
+    # 火车票专用字段
+    train_starting_station = fields.Char(string='出发站')
+    train_destination_station = fields.Char(string='到达站')
+    train_seat_category = fields.Char(string='座位类型')
+    train_seat_num = fields.Char(string='座位号')
+    train_passenger_name = fields.Char(string='乘客姓名')
+    train_passenger_id = fields.Char(string='乘客身份证')
+    train_num = fields.Char(string='车次')
+    train_time = fields.Char(string='发车时间')
+    train_ticket_num = fields.Char(string='车票号')
+    train_elec_ticket_num = fields.Char(string='电子票号')
     
     # OCR相关字段
     ocr_extracted = fields.Boolean(string='OCR提取', default=False)
@@ -167,6 +208,9 @@ class HrExpense(models.Model):
         if not ocr_result:
             raise UserError(_("OCR结果为空，无法创建费用"))
         
+        # 获取发票类型分类
+        invoice_type_category = ocr_result.get('invoice_type_category', 'vat_invoice')
+        
         # 提取基本信息
         vat_invoice_vendor_name = ocr_result.get('vendor') or ocr_result.get('seller_name') or ''
         vat_invoice_number = ocr_result.get('invoice_number') or ''
@@ -258,7 +302,23 @@ class HrExpense(models.Model):
             'payment_mode': 'company_account',
             'has_multiple_tax_rates': has_multiple_tax_rates,
             'total_amount': vat_invoice_amount_with_tax,  # 设置原生总计字段为含税金额
+            'invoice_type_category': invoice_type_category,
         }
+        
+        # 如果是火车票，添加火车票特有字段
+        if invoice_type_category == 'train_ticket':
+            vals.update({
+                'train_starting_station': ocr_result.get('starting_station'),
+                'train_destination_station': ocr_result.get('destination_station'),
+                'train_seat_category': ocr_result.get('seat_category'),
+                'train_seat_num': ocr_result.get('seat_num'),
+                'train_passenger_name': ocr_result.get('passenger_name') or ocr_result.get('name'),
+                'train_passenger_id': ocr_result.get('ID_card'),
+                'train_num': ocr_result.get('train_num'),
+                'train_time': ocr_result.get('time'),
+                'train_ticket_num': ocr_result.get('ticket_num'),
+                'train_elec_ticket_num': ocr_result.get('elec_ticket_num'),
+            })
         
         # 如果不是多种税率，尝试设置原生税率
         if not has_multiple_tax_rates and vat_invoice_tax_rate != "0%":

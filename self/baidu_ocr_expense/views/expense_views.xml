@@ -10,12 +10,14 @@
             <xpath expr="//field[@name='description']" position="after">
                 <field name="ocr_extracted" invisible="True"/>
                 <field name="has_multiple_tax_rates" invisible="True"/>
+                <field name="invoice_type_category" invisible="True"/>
                 <field name="vat_invoice_number" invisible="not ocr_extracted"/>
             </xpath>
             
             <!-- 在产品字段下方添加中文发票信息组 -->
             <xpath expr="//field[@name='product_id']/../../.." position="after">
-                <group string="发票信息" invisible="not ocr_extracted">
+                <!-- 增值税发票信息 -->
+                <group string="增值税发票信息" invisible="not ocr_extracted or invoice_type_category != 'vat_invoice'">
                     <group string="基本信息">
                         <field name="vat_invoice_number" readonly="True"/>
                         <field name="vat_invoice_code" readonly="True"/>
@@ -30,7 +32,7 @@
                         <field name="vat_amount_in_words" readonly="True"/>
                     </group>
                 </group>
-                <group string="销售方信息" invisible="not ocr_extracted">
+                <group string="销售方信息" invisible="not ocr_extracted or invoice_type_category != 'vat_invoice'">
                     <group>
                         <field name="vat_vendor_name" readonly="True"/>
                         <field name="vat_vendor_tax_id" readonly="True"/>
@@ -41,11 +43,44 @@
                         <field name="vat_purchaser_tax_id" readonly="True"/>
                     </group>
                 </group>
-            </xpath>
-            
-            <!-- 添加OCR识别按钮 -->
-            <xpath expr="//button[@name='action_submit_expenses']" position="before">
-                <button name="%(action_ocr_expense_wizard)d" string="OCR识别" type="action" class="oe_highlight" invisible="state != 'draft' or sheet_id"/>
+                
+                <!-- 火车票信息 -->
+                <group string="火车票信息" invisible="not ocr_extracted or invoice_type_category != 'train_ticket'">
+                    <group string="车票信息">
+                        <field name="train_num" readonly="True"/>
+                        <field name="train_starting_station" readonly="True"/>
+                        <field name="train_destination_station" readonly="True"/>
+                        <field name="train_time" readonly="True"/>
+                        <field name="train_ticket_num" readonly="True"/>
+                        <field name="train_elec_ticket_num" readonly="True"/>
+                    </group>
+                    <group string="乘客信息">
+                        <field name="train_passenger_name" readonly="True"/>
+                        <field name="train_passenger_id" readonly="True"/>
+                        <field name="train_seat_category" readonly="True"/>
+                        <field name="train_seat_num" readonly="True"/>
+                        <field name="vat_amount_with_tax" string="票价" readonly="False"/>
+                    </group>
+                </group>
+                
+                <!-- 出租车票信息 -->
+                <group string="出租车票信息" invisible="not ocr_extracted or invoice_type_category != 'taxi_receipt'">
+                    <group>
+                        <field name="vat_invoice_number" readonly="True"/>
+                        <field name="vat_invoice_date" readonly="True"/>
+                        <field name="vat_amount_with_tax" string="车费" readonly="False"/>
+                    </group>
+                </group>
+                
+                <!-- 其他类型发票 -->
+                <group string="发票信息" invisible="not ocr_extracted or invoice_type_category not in ('others', 'quota_invoice', 'air_ticket', 'roll_normal_invoice', 'printed_invoice', 'printed_elec_invoice', 'bus_ticket', 'toll_invoice', 'ferry_ticket', 'motor_vehicle_invoice', 'used_vehicle_invoice', 'taxi_online_ticket', 'limit_invoice', 'shopping_receipt', 'pos_invoice')">
+                    <group>
+                        <field name="vat_invoice_number" readonly="True"/>
+                        <field name="vat_invoice_date" readonly="True"/>
+                        <field name="vat_vendor_name" readonly="True"/>
+                        <field name="vat_amount_with_tax" readonly="False"/>
+                    </group>
+                </group>
             </xpath>
         </field>
     </record>
@@ -67,6 +102,7 @@
                 <field name="currency_id" invisible="True"/>
                 <field name="vat_invoice_number" optional="show"/>
                 <field name="vat_vendor_name" optional="show"/>
+                <field name="invoice_type_category" optional="show"/>
                 <field name="ocr_extracted" optional="hide"/>
                 <field name="has_multiple_tax_rates" optional="hide"/>
                 <field name="state"/>
@@ -101,6 +137,7 @@
             </xpath>
             <xpath expr="//group" position="inside">
                 <filter string="供应商" name="vendor_name" context="{'group_by': 'vat_vendor_name'}"/>
+                <filter string="发票类型" name="invoice_type_category" context="{'group_by': 'invoice_type_category'}"/>
             </xpath>
         </field>
     </record>
